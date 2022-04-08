@@ -1,0 +1,15 @@
+Learning timeline
+
+Week 1 and 2
+- Normalisation of a problem in the BFS model with CRRA utility and multiplicative transition equation of the permanent income
+- Markov operator, density kernel, multiplicative law of motion
+- Persistent vs permanent income shocks in buffer stock savings (Druedahl, Jorgensen 2016)
+- Aggregating heterogeneous agent models with permanent income shocks (Harmenberg, 2021)
+- computing Euler equation with dynamic programming, lagrangian static, value function iterated (base and howard improved), Time iterated (base, improved, endogeneous grid points) 
+- seminars: Basile Grassi about markup, Julia Cage about politically driven donations,
+- Julia: Setting up github, building a function, fields, broadcast, data type
+- Dolo, dolark, hark, theoretical foundations of buffer stock savings
+- log-normal shock, say mean 1, can take value -1, but then you take exponential, and thus it is never negative but between 0 and 1.
+
+
+
