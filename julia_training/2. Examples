@@ -14,7 +14,22 @@ function factorial2(n)
 end 
 sol = factorial2(20) # computing 20!, max factorial that can be computed with Julia is 20
 
+#solution 
+function factorial2(n)
+    k = 1
+    for i in 1:n
+        k *= i  # or k = k * i
+    end
+    return k
+end
+
+factorial2(4)
+
 # exercise 2 
+function binomial_rv(n, p)
+    
+    
+end
 
 
 
