@@ -25,11 +25,22 @@ end
 
 factorial2(4)
 
-# exercise 2 
+# exercise 2 programming a binomial variable
 function binomial_rv(n, p)
-    
-    
+    y = Vector{Float64}(undef, n)
+    Y = 0.
+    for i in 1:n 
+        y[i] = rand(1)[1] 
+        if y[i] >= p
+            Y = Y + 1
+        end
+    end
+    return Y
 end
+binomial_rv(10,0.50)
+
+# exercise 3 approximation to pi using monte-carlo
+
 
 
 
