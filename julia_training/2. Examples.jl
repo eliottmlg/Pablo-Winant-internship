@@ -56,7 +56,10 @@ ProbB = inB/n # probB = area og B
 area_circle = ProbB*4.0
 pi_calculated = area_circle
 
-# exercise 7 
+# exercise 7 finding first passage time of random walk
+for j in 1:100
+t_ = Vector{Float64}(undef, 100)
+t_0 = 1
 x = Vector{Float64}(undef, 201)
 x[1] = 0
 x[201] = 0
@@ -68,7 +71,11 @@ for i in 1:199
 end
 for i in 1:199 
     x[i+1] = alpha*x[i] + sigma*e[i]
+    if x[i+1] <= 0 
+        t_0 = i+1.0
+        break
+    end
 end
-
-
+t_[j] = t_0
+end
 
