@@ -56,3 +56,19 @@ ProbB = inB/n # probB = area og B
 area_circle = ProbB*4.0
 pi_calculated = area_circle
 
+# exercise 7 
+x = Vector{Float64}(undef, 201)
+x[1] = 0
+x[201] = 0
+e = Vector{Float64}(undef, 199)
+alpha = 1.0
+sigma = 0.2
+for i in 1:199
+    e[i] = randn(1)[1]
+end
+for i in 1:199 
+    x[i+1] = alpha*x[i] + sigma*e[i]
+end
+
+
+
