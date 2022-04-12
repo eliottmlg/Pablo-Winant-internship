@@ -28,7 +28,7 @@ factorial2(4)
 # exercise 2 programming a binomial variable
 function binomial_rv(n, p)
     y = Vector{Float64}(undef, n)
-    Y = 0.
+    Y = 0
     for i in 1:n 
         y[i] = rand(1)[1] 
         if y[i] >= p
@@ -40,7 +40,19 @@ end
 binomial_rv(10,0.50)
 
 # exercise 3 approximation to pi using monte-carlo
-
-
-
+n = 100000
+radius = Vector{Float64}(undef, n)
+inB = 0.0
+for i in 1:n
+  U = rand(2)
+  radius[i] = (U[1]^2 + U[2]^2)^(1/2)
+  if radius[i] <= 1
+    inB = inB + 1.0
+  elseif radius[i] > 1
+    inB = inB
+  end
+end
+ProbB = inB/n # probB = area og B 
+area_circle = ProbB*4.0
+pi_calculated = area_circle
 
