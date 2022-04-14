@@ -52,12 +52,12 @@ for i in 1:n
     inB = inB
   end
 end
-ProbB = inB/n # probB = area og B 
+ProbB = inB/n # probB = area of B 
 area_circle = ProbB*4.0
 pi_calculated = area_circle
 
 # exercise 7 finding first passage time of random walk
-for j in 1:100
+
 t_ = Vector{Float64}(undef, 100)
 t_0 = 1
 x = Vector{Float64}(undef, 201)
@@ -66,6 +66,8 @@ x[201] = 0
 e = Vector{Float64}(undef, 199)
 alpha = 1.0
 sigma = 0.2
+
+for j in 1:100
 for i in 1:199
     e[i] = randn(1)[1]
 end
@@ -78,4 +80,20 @@ for i in 1:199
 end
 t_[j] = t_0
 end
+
+using Plots
+index = 1:200
+plot(index, x)
+
+
+
+jean baptiste michau
+pierre edouard collignon
+savoir resoudre model consumption saving (revenue fluctue chain markov etat haut etat bas, epargner a certain taux dinteret, max la sum des consommation avec les gamma)
+ABOSULEMENT: value function iteration
+simple, un shock revenue exogene 
+DANS UNE SEMAINE,
+cours demain matin bachelor X, 8h a midi, introduction a julia, modele epidemiology, slides sur la convergence des series, partie programmation utile
+COURS: site github 
+mie37 blob  master notebook 
 
