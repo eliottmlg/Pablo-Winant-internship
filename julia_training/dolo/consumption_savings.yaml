@@ -1,54 +1,56 @@
-symbols:
-    exogenous: [y]
-    states: [w]
-    controls: [c]
-    parameters: [β, γ, σ, ρ, r, cbar]
+name: Consumption Savings
 
+symbols:
+    states: [m]
+    exogenous: [e]
+    parameters: [beta, B, a_max, r, w]
+    controls: [xi]
+
+
+definitions: |
+    c[t] = m[t]*xi[t]
 
 equations:
 
-    transition: |
-        w[t] = exp(y[t]) + (w[t-1]-c[t-1])*r
-
     arbitrage: |
-        β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0<=c[t]<=w[t]
+        beta*(1+r)*(c[t+1]/c[t])^(-1)-1 ⟂ 0 <= xi[t] <= 1
 
-    # half_transition: |
-    #     w[t] = exp(y[t]) + a[t-1]*r
 
-    # reverse_state: |
-    #     w[t] = a[t] + c[t]
-
-    # expectation: |
-    #     mr[t] = β*( c[t+1]/cbar )^(-γ)*r
-
-    # direct_response_egm: |
-    #     c[t] = cbar*(mr[t])^(-1/γ)
+    transition: |
+        m[t] = w*exp(e[t]) + (m[t-1]-c[t-1])*(1+r)
 
 calibration:
-    β: 0.96
-    γ: 4.0
-    σ: 0.1
-    ρ: 0.0
-    r: 1.02
-    cbar: c
 
-    w: 1.0
-    ξ: 0.0
-    c: 0.9*w
-    y: 0.0
+    beta: 0.99
+    B: -1
+    a_max: 300
+    m: 1.0
+    c: 1
+    a: 1
+    i: a
+    K: 40.
+    alpha: 0.36
+    A: 1
+    N: 1
+    delta: 0.025
+    r: alpha*(N/K)^(1-alpha) - delta
+    w: (1-alpha)*(K/N)^(alpha)
+    e: 0
+    xi: 0.9
 
-domain:
-    w: [0.5, 4.0]
 
 exogenous:
-    y: !UNormal
-        sigma: σ
+    e: !UNormal
+        σ: 0.1
+
+
+domain:
+    m: [0.1, a_max]
 
 
 options:
     discretization:
+        exo:
+            n: 5
         endo:
             n: [100]
-        exo:
-            n: 7
