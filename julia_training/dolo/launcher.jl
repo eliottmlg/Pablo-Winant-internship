@@ -1,6 +1,6 @@
-Pkg.add("Optim")
 using Pkg
 using Dolo
+Pkg.add("Optim")
 
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/dolo/consumption_savings.yaml"
 readlines(filename)

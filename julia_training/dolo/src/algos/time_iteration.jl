@@ -197,7 +197,7 @@ function time_iteration(model;
     trace = false,
     tol_η = 1e-8,
     tol_ε = 1e-8,
-    maxit=110
+    maxit=1000
 )
     
     F = Euler(model; discretization=discretization, interpolation=interpolation, dr0=dr0,  ignore_constraints=ignore_constraints)
