@@ -15,8 +15,9 @@ Pkg.add("Interpolations")
 Pkg.add("NLsolve")
 Pkg.add("Random")
 Pkg.add("Parameters")
+Pkg.add("LaTeXStrings")
 using LinearAlgebra, Statistics
-using Plots, QuantEcon, Interpolations, NLsolve, Optim, Random, Parameters
+using Plots, QuantEcon, Interpolations, NLsolve, Optim, Random, Parameters, LaTeXStrings
 using Optim: maximum, maximizer 
 
 ###
@@ -111,6 +112,63 @@ plt = plot(ylim = (-35,-24))
 plot!(plt, p.y, w, linewidth = 2, alpha = 0.6, label = L"T(v^*)")
 plot!(plt, p.y, w_star, linewidth = 2, alpha=0.6, label = L"v^*")
 plot!(plt, legend = :bottomright)
+
+
+# 
+
+w = 5 * log.(p.y)  # An initial condition -- fairly arbitrary
+n = 35
+
+plot(xlim = (extrema(p.y)), ylim = (-50, 10))
+lb = "initial condition"
+plt = plot(p.y, w, color = :black, linewidth = 2, alpha = 0.8, label = lb)
+for i in 1:n
+    w = T(w; p).w
+    plot!(p.y, w, color = RGBA(i/n, 0, 1 - i/n, 0.8), linewidth = 2, alpha = 0.6,
+          label = "")
+end
+
+lb = "true value function"
+plot!(plt, p.y, v_star.(p.y; p), color = :black, linewidth = 2, alpha = 0.8, label = lb)
+plot!(plt, legend = :bottomright)
+
+# 
+
+function solve_optgrowth(initial_w; p, iterations = 500, m = 3, show_trace = false) 
+    results = fixedpoint(w -> T(w;p).w, initial_w; iterations, m, show_trace) # Anderson iteration
+    v_star = results.zero
+    σ = T(results.zero;p).σ
+    return (;v_star, σ, results)
+end
+
+#
+
+initial_w = 5 * log.(p.y)
+sol = solve_optgrowth(initial_w;p)
+v_star_approx = sol.v_star
+println("Converged in $(sol.results.iterations) to an ||residuals||_∞ of $(sol.results.residual_norm)")
+
+plt = plot(ylim = (-35, -24))
+plot!(plt, p.y, v_star_approx, linewidth = 2, alpha = 0.6,
+      label = "approximate value function")
+plot!(plt, p.y, v_star.(p.y;p), linewidth = 2, alpha = 0.6, label = "true value function")
+plot!(plt, legend = :bottomright)
+
+#
+
+plt = plot(p.y, T(v_star_approx; p).σ, lw=2, alpha=0.6, label = "approximate policy function")
+plot!(plt, p.y, c_star.(p.y; p), lw = 2, alpha = 0.6, label = "true policy function")
+plot!(plt, legend = :bottomright)
+
+#
+
+
+############ Time iteration
+
+
+
+
+
 
 
 
