@@ -120,3 +120,52 @@ function initialize(cp)
 
     return V, c
 end
+
+cp = ConsumerProblem()
+v, c, = initialize(cp)
+
+@btime T(cp, v);
+@btime K(cp, c);
+
+
+# ex1 
+cp = ConsumerProblem()
+N = 80
+
+V, c = initialize(cp)
+println("Starting value function iteration")
+for i in 1:N
+    V = T(cp, V)
+end
+c1 = T(cp, V, ret_policy=true)
+
+V2, c2 = initialize(cp)
+println("Starting policy function iteration")
+for i in 1:N
+    c2 = K(cp, c2)
+end
+
+plot(cp.asset_grid, c1[:, 1], label = "value function iteration")
+plot!(cp.asset_grid, c2[:, 1], label = "policy function iteration")
+plot!(xlabel = "asset level", ylabel = "Consumption (low income)")
+plot!(legend = :topleft)
+
+# ex2
+r_vals = range(0, 0.04, length = 4)
+traces = []
+legends = []
+
+for r_val in r_vals
+    cp = ConsumerProblem(r = r_val)
+    v_init, c_init = initialize(cp)
+    c = compute_fixed_point(x -> K(cp, x),
+                            c_init,
+                            max_iter = 150,
+                            verbose = false)
+    traces = push!(traces, c[:, 1])
+    legends = push!(legends, L"r = %$(round(r_val, digits = 3))")
+end
+
+plot(traces, label = reshape(legends, 1, length(legends)))
+plot!(xlabel = "asset level", ylabel = "Consumption (low income)")
+plot!(legend = :topleft)
