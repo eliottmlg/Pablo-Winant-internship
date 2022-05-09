@@ -77,3 +77,4 @@ plot(1:N, consumptionTI, label = "TI consumption low income")
 plot!(1:N, consumptionVI, label = "VI consumption low income")
 plot!(xlabel = "number of iterations", ylabel = "Consumption level")
 plot!(legend = :topright)
+
