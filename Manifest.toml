@@ -241,7 +241,7 @@ version = "3.3.0"
 
 [[deps.Dolo]]
 deps = ["AxisArrays", "BasisMatrices", "BenchmarkTools", "Compat", "DataStructures", "Distributions", "Dolang", "FiniteDiff", "Formatting", "ForwardDiff", "HTTP", "IterTools", "IterativeSolvers", "Lerche", "LinearAlgebra", "LinearMaps", "MacroTools", "NLsolve", "Optim", "Plots", "Printf", "QuantEcon", "SimplePlots", "StaticArrays", "StringDistances", "Test", "YAML"]
-path = "C:\\Users\\t480\\.julia\\dev\\Dolo"
+path = "Dolo"
 uuid = "9d24351c-2990-5e1b-a277-04c4b809c898"
 version = "0.4.4"
 

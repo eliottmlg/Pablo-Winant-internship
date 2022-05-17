@@ -78,3 +78,115 @@ plot!(1:N, consumptionVI, label = "VI consumption low income")
 plot!(xlabel = "number of iterations", ylabel = "Consumption level")
 plot!(legend = :topright)
 
+
+
+
+##### time iteration Algorithm
+
+function time_iteration(model;
+    dr0=Dolo.ConstantDecisionRule(model),
+    discretization=Dict(),
+    interpolation=:cubic,
+    verbose=true,
+    details=true,
+    ignore_constraints=false,
+    trace = false,
+    tol_η = 1e-8,
+    tol_ε = 1e-8,
+    maxit=500
+)
+    
+    F = Euler(model; discretization=discretization, interpolation=interpolation, dr0=dr0,  ignore_constraints=ignore_constraints)
+
+    complementarities = false
+
+
+    if interpolation != :cubic
+        error("Interpolation option ($interpolation) is currently not recognized.")
+    end
+
+    ti_trace = trace ? IterationTrace([x0]) : nothing
+
+
+    z0 = deepcopy(F.x0)
+    z1 = deepcopy(z0)
+
+    log = IterationLog(
+        it = ("n", Int),
+        err =  ("ϵₙ=|F(xₙ,xₙ)|", Float64),
+        sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+        lam = ("λₙ=ηₙ/ηₙ₋₁",Float64),
+        elapsed = ("Time", Float64)
+    )
+
+    initialize(log, verbose=verbose; message="Time Iteration")
+
+    local err_η, z0, z1
+
+    err_η_0 = NaN
+   # err_η = err_η_0 #
+   # err_ε_0 = NaN #
+   # err_ε = err_ε_0 #
+
+    it = 0
+
+    while it<=maxit
+
+        it += 1
+
+        t1 = time_ns()
+
+        r0 = F(z0, z0; set_future=true)
+
+        err_ε = norm(r0)
+       # if err_ε<tol_ε
+       #    break
+       # end
+
+        fun = u->F(u, z0; set_future=false)
+        dfun = u->df_A(F,u, z0; set_future=false)
+
+        sol = newton2(
+            fun, dfun,
+            z0, verbose=false
+        )
+
+        z1 = sol
+        δ = z1 - z0
+
+        trace && push!(ti_trace.trace, z1)
+
+        err_η = norm(δ)
+        gain = err_η / err_η_0
+        err_η_0 = err_η
+
+
+
+        # z0.data[:] .= z1.data
+        z0 = z1
+
+        elapsed = time_ns() - t1
+
+        elapsed /= 1000000000
+
+        append!(log; verbose=verbose, it=it, err=err_ε, sa=err_η, lam=gain, elapsed=elapsed)
+
+
+        if err_η<tol_η && err_ε<tol_ε
+            break 
+        end
+        
+    end
+
+    finalize(log, verbose=verbose)
+
+
+    res = TimeIterationResult(F.dr.dr, it, complementarities, F.dprocess, err_η<tol_η, tol_η, err_η, log, ti_trace)
+    return res
+
+end
+
+# iteration 110 is not what is evaluated by the convergence dummy
+# the 111th iteration would be evaluated, but does not show up in the table
+#  SO, either need to change order in the TI function
+#  or just change the displaying
