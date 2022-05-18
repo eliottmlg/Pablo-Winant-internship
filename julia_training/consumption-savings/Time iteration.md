@@ -57,6 +57,19 @@ and a function converged() of the form:
 ```r
 converged(r::TimeIterationResult) = r.x_converged
 ```
+The TI algorithm would yield the following output:
+
+```r
+function Base.show(io::IO, r::TimeIterationResult)
+    @printf io "Results of Time Iteration Algorithm\n"
+    @printf io " * Complementarities: %s\n" string(r.complementarities)
+    @printf io " * Discretized Process type: %s\n" string(typeof(r.dprocess))
+    @printf io " * Decision Rule type: %s\n" string(typeof(r.dr))
+    @printf io " * Number of iterations: %s\n" string(r.iterations)
+    @printf io " * Convergence: %s\n" converged(r)
+    @printf io "   * |x - x'| < %.1e: %s\n" r.x_tol r.x_converged
+end
+```
 
 and the following TI algorithm:
 
@@ -156,6 +169,100 @@ function time_iteration(model;
     res = TimeIterationResult(F.dr.dr, it, complementarities, F.dprocess, err_η<tol_η, tol_η, err_η, log, ti_trace)
     return res
 
+end
+```
+the output is the following
+
+```
+108 |   1.3609e-08 |   1.5677e-08 |   8.0463e-01 |   5.2709e-02
+     109 |   1.0950e-08 |   1.2615e-08 |   8.0465e-01 |   5.4535e-02
+------------------------------------------------------------------
+Results of Time Iteration Algorithm
+ * Complementarities: false
+ * Discretized Process type: Dolo.DiscretizedIIDProcess
+ * Decision Rule type: Dolo.CubicDR{Dolo.EmptyGrid{1}, Dolo.UCGrid{1}, 1, 1}
+ * Number of iterations: 110
+ * Convergence: false
+   * |x - x'| < 1.0e-08: false
+```
+
+according to this algorithm, convergence is achieved when the distance between two policy function computed is zero. Here, "Convergence: false" even though the algorithm stopped. The reason is that   what is displayed is not the current iteration (110th) but the precedent.
+
+We modify the function time_iteration(). 
+
+```r
+
+        append!(log; verbose=verbose, it=it, err=err_ε, sa=err_η, lam=gain, elapsed=elapsed)
+
+        if err_ε<tol_ε       # change
+            break
+        end
+
+        if err_η<tol_η
+            break 
+        end
+
+    end
+
+    finalize(log, verbose=verbose)
+
+
+    res = TimeIterationResult(F.dr.dr, it, complementarities, F.dprocess, err_η<tol_η, tol_η, err_η, log, ti_trace)
+    return res
+
+end
+```
+
+which yields the following:
+
+```
+109 |   1.0950e-08 |   1.2615e-08 |   8.0465e-01 |   6.4835e-02
+     110 |   8.8111e-09 |   1.0151e-08 |   8.0466e-01 |   5.5368e-02
+------------------------------------------------------------------
+Results of Time Iteration Algorithm
+ * Complementarities: false
+ * Discretized Process type: Dolo.DiscretizedIIDProcess
+ * Decision Rule type: Dolo.CubicDR{Dolo.EmptyGrid{1}, Dolo.UCGrid{1}, 1, 1}
+ * Number of iterations: 110
+ * Convergence: false
+   * |x - x'| < 1.0e-08: false
+```
+
+so we fixed the problem of the wrong iteration being displayed. 
+
+2. We change the criterion for convergence, which we now set as whether the Euler equation is satisfied. 
+
+we first remove x_converged, which indicates if the distance between two policy function is close to zero, and can be misinterpreted with the event the Euler equation is satisfied.
+
+```r
+   mutable struct TimeIterationResult
+    dr::AbstractDecisionRule
+    iterations::Int
+    complementarities::Bool
+    dprocess::AbstractDiscretizedProcess
+  #  x_converged::Bool
+    x_tol::Float64  
+    err::Float64
+    log::IterationLog
+    trace::Union{Nothing,IterationTrace}
+    end
+```
+
+we then redefine the converged() function so that is it TRUE when the TI algorithm finds a solution, that is when the Euler equation is met. For this, need the following:
+```r
+converged(r::TimeIterationResult) = r.x_converged
+```
+The TI algorithm would yield the following output:
+
+```r
+function Base.show(io::IO, r::TimeIterationResult)
+    @printf io "Results of Time Iteration Algorithm\n"
+    @printf io " * Complementarities: %s\n" string(r.complementarities)
+    @printf io " * Discretized Process type: %s\n" string(typeof(r.dprocess))
+    @printf io " * Decision Rule type: %s\n" string(typeof(r.dr))
+    @printf io " * Number of iterations: %s\n" string(r.iterations)
+    @printf io " * Convergence: %s\n" converged(r)
+    @printf io "   * |x - x'| < %.1e: %s\n" r.x_tol r.x_converged
 end
 ```
 
