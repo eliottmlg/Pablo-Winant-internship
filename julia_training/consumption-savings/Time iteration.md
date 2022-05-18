@@ -198,7 +198,7 @@ We modify the function time_iteration().
             break
         end
 
-        if err_η<tol_η
+        if err_η<tol_η       # change
             break 
         end
 
@@ -235,22 +235,23 @@ so we fixed the problem of the wrong iteration being displayed.
 we first remove x_converged, which indicates if the distance between two policy function is close to zero, and can be misinterpreted with the event the Euler equation is satisfied.
 
 ```r
-   mutable struct TimeIterationResult
+  mutable struct TimeIterationResult
     dr::AbstractDecisionRule
     iterations::Int
     complementarities::Bool
     dprocess::AbstractDiscretizedProcess
-  #  x_converged::Bool
-    x_tol::Float64  
-    err::Float64
+    ϵ::Float64 # distance between RHS and LFS of Euler equation, previously err_ε
+    τ_ϵ::Float64 # tolerance for ϵ, previously tol_ε
+    η::Float64 # distance between two policy functions computed, previously err or err_η
+    τ_η::Float64 # tolerance for η, previously x_tol or tol_η
     log::IterationLog
     trace::Union{Nothing,IterationTrace}
-    end
+end
 ```
 
 we then redefine the converged() function so that is it TRUE when the TI algorithm finds a solution, that is when the Euler equation is met. For this, need the following:
 ```r
-converged(r::TimeIterationResult) = r.x_converged
+converged(r::TimeIterationResult) = r.ϵ<r.τ_ϵ 
 ```
 The TI algorithm would yield the following output:
 
@@ -261,11 +262,10 @@ function Base.show(io::IO, r::TimeIterationResult)
     @printf io " * Discretized Process type: %s\n" string(typeof(r.dprocess))
     @printf io " * Decision Rule type: %s\n" string(typeof(r.dr))
     @printf io " * Number of iterations: %s\n" string(r.iterations)
-    @printf io " * Convergence: %s\n" converged(r)
-    @printf io "   * |x - x'| < %.1e: %s\n" r.x_tol r.x_converged
+    @printf io " * Convergence: %s\n" converged(r) 
 end
 ```
-
+where we remove |x - x'| for redundancy.
 
 
 
