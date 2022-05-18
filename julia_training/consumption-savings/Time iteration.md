@@ -383,4 +383,6 @@ Stacktrace:
 
 It seems it does not make sense to include the tolerance of epsilon and eta in the structure TimeIterationResult, instead it would make sense to include a convergence criterion, for both epsilon and eta. 
 
+Still the same problem, variable undefined.
+
 
