@@ -267,8 +267,120 @@ end
 ```
 where we remove |x - x'| for redundancy.
 
+with the following algorithm
+
+```r
+function time_iteration(model;
+    dr0=Dolo.ConstantDecisionRule(model),
+    discretization=Dict(),
+    interpolation=:cubic,
+    verbose=true,
+    details=true,
+    ignore_constraints=false,
+    trace = false,
+    τ_ϵ = 1e-8,
+    τ_η = 1e-8,
+    maxit=500
+)
+    
+    F = Euler(model; discretization=discretization, interpolation=interpolation, dr0=dr0,  ignore_constraints=ignore_constraints)
+
+    complementarities = false
 
 
+    if interpolation != :cubic
+        error("Interpolation option ($interpolation) is currently not recognized.")
+    end
 
+    ti_trace = trace ? IterationTrace([x0]) : nothing
+
+
+    z0 = deepcopy(F.x0)
+    z1 = deepcopy(z0)
+
+    log = IterationLog(
+        it = ("n", Int),
+        err =  ("ϵₙ=|F(xₙ,xₙ)|", Float64),
+        sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+        lam = ("λₙ=ηₙ/ηₙ₋₁",Float64),
+        elapsed = ("Time", Float64)    
+    )                                 
+
+    initialize(log, verbose=verbose; message="Time Iteration")
+
+    local η, z0, z1
+
+    η_0 = NaN
+
+    it = 0
+
+    while it<=maxit
+
+        it += 1
+
+        t1 = time_ns()
+
+        r0 = F(z0, z0; set_future=true)
+
+        ϵ = norm(r0)
+
+        fun = u->F(u, z0; set_future=false)
+        dfun = u->df_A(F,u, z0; set_future=false)
+
+        sol = newton2(
+            fun, dfun,
+            z0, verbose=false
+        )
+
+        z1 = sol
+        δ = z1 - z0
+
+        trace && push!(ti_trace.trace, z1)
+
+        η = norm(δ)
+        gain = η / η_0
+        η_0 = η
+
+
+        # z0.data[:] .= z1.data
+        z0 = z1
+
+        elapsed = time_ns() - t1
+
+        elapsed /= 1000000000
+
+        append!(log; verbose=verbose, it=it, err=ϵ, sa=η, lam=gain, elapsed=elapsed)
+
+        
+        if ϵ<τ_ϵ      
+           break                 
+       end  
+
+        if η<τ_η     
+            break 
+         end
+
+    end
+
+    finalize(log, verbose=verbose)
+
+
+    res = TimeIterationResult(F.dr.dr, it, complementarities, F.dprocess, ϵ, τ_ϵ, η, τ_η, log, ti_trace)  # line 313
+  return res
+
+end
+```
+however it encounters an error
+
+```r
+  110 |   8.8111e-09 |   1.0151e-08 |   8.0466e-01 |   5.8307e-02
+------------------------------------------------------------------
+ERROR: UndefVarError: err not defined
+Stacktrace:
+ [1] time_iteration(model::Model{Symbol("##292"), Dolo.ProductDomain{2, Dolo.EmptyDomain{1}, Dolo.CartesianDomain{1}}}; dr0::Dolo.ConstantDecisionRule{1}, discretization::Dict{Any, Any}, interpolation::Symbol, verbose::Bool, details::Bool, ignore_constraints::Bool, trace::Bool, τ_ϵ::Float64, τ_η::Float64, maxit::Int64)    
+   @ Dolo c:\Users\t480\GitHub\Pablo-Winant-internship\Dolo\src\algos\time_iteration.jl:313
+```
+
+It seems it does not make sense to include the tolerance of epsilon and eta in the structure TimeIterationResult, instead it would make sense to include a convergence criterion, for both epsilon and eta. 
 
 
