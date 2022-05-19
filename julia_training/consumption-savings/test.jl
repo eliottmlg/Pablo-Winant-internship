@@ -190,3 +190,15 @@ end
 # the 111th iteration would be evaluated, but does not show up in the table
 #  SO, either need to change order in the TI function
 #  or just change the displaying
+
+
+for i in 1:2
+    if i==2
+        x=1
+        print(x)
+    end
+    if i==1
+        x=0
+        print(x)
+    end
+end     # variable x requires a new binding each time a loop is executed 
