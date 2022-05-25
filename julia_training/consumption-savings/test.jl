@@ -242,3 +242,7 @@ x
 
 
 vector_time = rand(500)
+
+heurenow = time_ns() 
+duree = time_ns()-heurenow
+duree /= 1000000000
