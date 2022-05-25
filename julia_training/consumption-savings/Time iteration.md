@@ -383,6 +383,99 @@ Stacktrace:
 
 It seems it does not make sense to include the tolerance of epsilon and eta in the structure TimeIterationResult, instead it would make sense to include a convergence criterion, for both epsilon and eta. 
 
-Still the same problem, variable undefined. An explanation is that, in Julia, a variable x requires a new binding each time a loop is executed.
+Still the same problem, variable undefined. In Julia, a variable x requires a new binding each time a loop is executed. The was a problem with the scope of the variable err_$\epsilon$, which was only defined within the ``while`` function, and was thus not passed onto the functions out of the loop, such as ``res``. 
+
+We solve the problem by defining the variable err_$\epsilon$ outside the ``while`` function, using ``local err_$\epsilon$, err_$\eta$``. We make sure to use the good font for greek letters. 
+
+```r
+    local err_ε, err_η, z0, z1 #
+
+    log = IterationLog(
+        it = ("n", Int),
+        err =  ("εₙ=|F(xₙ,xₙ)|", Float64),
+        sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+        lam = ("λₙ=ηₙ/ηₙ₋₁",Float64),
+        elapsed = ("Time", Float64)
+    )
+
+    initialize(log, verbose=verbose; message="Time Iteration")
+
+    err_η_0 = NaN
+
+    it = 0
+
+    while it<=maxit
+
+        it += 1
+
+        t1 = time_ns()
+
+        r0 = F(z0, z0; set_future=true)
+
+        err_ε=norm(r0)
+
+        fun = u->F(u, z0; set_future=false)
+        dfun = u->df_A(F,u, z0; set_future=false)
+
+        sol = newton2(
+            fun, dfun,
+            z0, verbose=false
+        )
+
+        z1 = sol
+        δ = z1 - z0
+
+        #trace && push!(ti_trace.trace, z1)
+
+        err_η = norm(δ)
+        gain = err_η / err_η_0
+        err_η_0 = err_η
+
+        # z0.data[:] .= z1.data
+        z0 = z1
+
+        elapsed = time_ns() - t1
+
+        elapsed /= 1000000000
+
+     append!(log; 
+        verbose=verbose, 
+        it=it, 
+        err=err_ε, 
+        sa=err_η, 
+        lam=gain, 
+        elapsed=elapsed
+     )
+
+     if err_ε<tol_ε       # change
+         break
+     end
+
+     if err_η<tol_η       # change
+         break 
+     end
+
+end
+
+ finalize(log, verbose=verbose)
+
+
+ res = TimeIterationResult(
+     F.dr.dr, 
+     it, 
+     complementarities, 
+     F.dprocess, 
+     err_ε, 
+     err_η, 
+     tol_ε, 
+     tol_η, 
+     log, 
+     ti_trace
+     )
+
+ return res
+
+end
+```
 
 
