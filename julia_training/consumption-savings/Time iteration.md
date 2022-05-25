@@ -477,10 +477,150 @@ end
 
 end
 ```
-3. displaying the minimal number of iterations left before eta meets its tolerance level.
+3. We modify the code to display the minimal number of iterations left before eta meets its tolerance level.
    We replace all ``log`` with ``Log`` in the file "time_iteration.jl" in order to use the logarithm function to calculate $p$. 
 
    where
    $p \ge \frac{log(\tau_\eta/\eta_n)}{log(\lambda)}$. 
 
+We also modify the code to show the time remaining, before eta meets it tolerance level. 
 
+$TimeLeft = \frac{time_n + time_{n-1} + ... + time_{n-4}}{5} * p$
+
+```r
+
+mutable struct TimeIterationResult
+    dr::AbstractDecisionRule
+    iterations::Int
+    complementarities::Bool
+    dprocess::AbstractDiscretizedProcess
+    ϵ::Float64 
+    η::Float64
+    τ_ϵ::Float64 
+    τ_η::Float64
+    τ_λ::Float64
+    p::Int #
+    Log::IterationLog
+    trace::Union{Nothing,IterationTrace}
+end
+
+function time_iteration(model;
+    dr0=Dolo.ConstantDecisionRule(model),
+    discretization=Dict(),
+    interpolation=:cubic,
+    verbose=true,
+    details=true,
+    ignore_constraints=false,
+    trace = false,
+    tol_η = 1e-8,
+    tol_ε = 1e-8,
+    λbar = 8.0466e-01, #
+    maxit=1000,
+)
+    
+    F = Euler(model; discretization=discretization, interpolation=interpolation, dr0=dr0,  ignore_constraints=ignore_constraints)
+
+    complementarities = false
+
+
+    if interpolation != :cubic
+        error("Interpolation option ($interpolation) is currently not recognized.")
+    end
+
+    ti_trace = trace ? IterationTrace([x0]) : nothing
+
+
+    z0 = deepcopy(F.x0)
+    z1 = deepcopy(z0)
+
+    vector_time = rand(maxit) #
+
+    local err_ε, err_η, z0, z1, p #
+
+    Log = IterationLog(
+        it = ("n", Int),
+        err =  ("εₙ=|F(xₙ,xₙ)|", Float64),
+        sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+        lam = ("λₙ=ηₙ/ηₙ₋₁", Float64),
+        elapsed = ("Time", Float64),
+        nb_it_before_convergence_of_x = ("Min nb of iter before ηₙ<τ_η", Int), #
+        remaining_time = ("Time left before ηₙ<τ_η", Float64) #
+    )
+
+    initialize(Log, verbose=verbose; message="Time Iteration")
+
+    err_η_0 = NaN
+
+    it = 0
+
+    while it<=maxit
+
+        it += 1
+
+        t1 = time_ns()
+
+        r0 = F(z0, z0; set_future=true)
+
+        err_ε=norm(r0)
+
+        fun = u->F(u, z0; set_future=false)
+        dfun = u->df_A(F,u, z0; set_future=false)
+
+        sol = newton2(
+            fun, dfun,
+            z0, verbose=false
+        )
+
+        z1 = sol
+        δ = z1 - z0
+
+        #trace && push!(ti_trace.trace, z1)
+
+        err_η = norm(δ)
+        gain = err_η / err_η_0
+        err_η_0 = err_η
+
+        # z0.data[:] .= z1.data
+        z0 = z1
+
+        p = log(tol_η/err_η) / log(λbar) # 
+
+        elapsed = time_ns() - t1
+
+        elapsed /= 1000000000
+
+        vector_time[it] = elapsed #
+
+        local avg_time #
+
+        for it in 5:maxit #
+            avg_time = (vector_time[it]+vector_time[it-1]+vector_time[it-2]+vector_time[it-3]+vector_time[it-4])/5
+        end
+
+        time_left = avg_time*p # 
+
+        p = round(Int, p) #
+
+     append!(Log; 
+        verbose=verbose, 
+        it=it, 
+        err=err_ε, 
+        sa=err_η, 
+        lam=gain, 
+        elapsed=elapsed,
+        nb_it_before_convergence_of_x=p, #
+        remaining_time=time_left #
+     )
+
+     if err_ε<tol_ε     
+         break
+     end
+
+     if err_η<tol_η       
+         break 
+     end
+
+end
+
+
+```
