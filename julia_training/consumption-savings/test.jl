@@ -202,3 +202,40 @@ for i in 1:2
         print(x)
     end
 end     # variable x requires a new binding each time a loop is executed 
+
+
+
+function volume_sphere(r)
+   # (4/3)(round(π, sigdigits=6))(r)^3
+    (4/3) * round(π, sigdigits=6) * r^3
+  end
+
+  function volume_sphere(r)
+    (4/3)*π*r^3
+  end
+
+println(volume_sphere(5))
+
+
+
+
+
+x = 3.141592653589793238462643383279502884197
+xmax = maximum(x)-30
+xmaxconverted = trunc(Int32, xmax) 
+print(typeof(xmaxconverted)) 
+
+
+
+
+
+
+
+x = 1.659259375937593759357
+
+floor(x)
+
+y = x - floor(x)
+
+x = round(Int, x)
+x

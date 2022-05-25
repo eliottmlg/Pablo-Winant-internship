@@ -447,11 +447,11 @@ We solve the problem by defining the variable err_$\epsilon$ outside the ``while
         elapsed=elapsed
      )
 
-     if err_ε<tol_ε       # change
+     if err_ε<tol_ε     
          break
      end
 
-     if err_η<tol_η       # change
+     if err_η<tol_η      
          break 
      end
 
