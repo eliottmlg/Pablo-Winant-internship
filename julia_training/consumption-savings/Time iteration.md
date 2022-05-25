@@ -477,5 +477,10 @@ end
 
 end
 ```
+3. displaying the minimal number of iterations left before eta meets its tolerance level.
+   We replace all ``log`` with ``Log`` in the file "time_iteration.jl" in order to use the logarithm function to calculate $p$. 
+
+   where
+   $p \ge \frac{log(\tau_\eta/\eta_n)}{log(\lambda)}$. 
 
 
