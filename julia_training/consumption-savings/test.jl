@@ -242,7 +242,16 @@ x
 
 
 vector_time = rand(500)
+vector_time[1] = 5
+vector_time
 
 heurenow = time_ns() 
 duree = time_ns()-heurenow
 duree /= 1000000000
+
+x=0.5
+if x>=1
+    y = NaN
+elseif x<1
+    y = 4*x 
+end
