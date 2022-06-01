@@ -483,7 +483,7 @@ end
    where
    $p \ge \frac{log(\tau_\eta/\eta_n)}{log(\lambda)}$. 
 
-We also modify the code to show the time remaining, before eta meets it tolerance level. 
+We also modify the code to show the time remaining, before eta meets its tolerance level. 
 
 $TimeLeft = \frac{time_n + time_{n-1} + ... + time_{n-4}}{5} * p$
 
@@ -753,4 +753,159 @@ Results of Time Iteration Algorithm
  * |x - x'| < 1.0e-08: false
  
 
+```
+
+$\lambda_n=\frac{\eta_n}{\eta_{n-1}}$ with $\eta_n = |{x_n-x_{n-1}}|$, so when lambda is equal or greater than one, in the current iteration we are further away from finding a fixed-point for the policy function $x_n$ than in the previous iteration. In this case, $\lambda_n$ is not a good indicator measure of convergence of policy function, as if we apply recursively $\eta_n = \lambda_n * \eta_{n-1}$, the sequence $(\eta_n)$ would be diverging. As a result, we cannot estimate the number of iterations before convergence of eta towards its tolerance level and thus we cannot estimate the remaining time. We change $p=NaN$ for lamba greater or equal to one.
+
+We also change names of columns in the output table such that the row-name fits in one row.
+ 
+
+ ```r
+ 
+function time_iteration(model;
+    dr0=Dolo.ConstantDecisionRule(model),
+    discretization=Dict(),
+    interpolation=:cubic,
+    verbose=true,
+    details=true,
+    ignore_constraints=false,
+    trace = false,
+    tol_η = 1e-8,
+    tol_ε = 1e-8,
+    λbar = 8.0466e-01, 
+    maxit=500
+)
+    
+    F = Euler(model; discretization=discretization, interpolation=interpolation, dr0=dr0,  ignore_constraints=ignore_constraints)
+
+    complementarities = false
+
+
+    if interpolation != :cubic
+        error("Interpolation option ($interpolation) is currently not recognized.")
+    end
+
+    ti_trace = trace ? IterationTrace([F.x0]) : nothing
+
+    z0 = deepcopy(F.x0)
+    z1 = deepcopy(z0)
+
+    vector_time = rand(maxit) 
+
+    local err_ε, err_η, z0, z1, p, it 
+
+    log = Iterationlog(
+        it = ("n", Int),
+        err =  ("εₙ=|F(xₙ,xₙ)|", Float64),
+        sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+        lam = ("λₙ=ηₙ/ηₙ₋₁", Float64),
+        elapsed = ("Time (s)", Float64),
+        nb_it_before_convergence_of_x = ("N-n", Int), 
+        remaining_time = ("Remain (s)", Float64), 
+    )
+
+    initialize(log, verbose=verbose; message="Time Iteration")
+
+    err_η_0 = NaN
+
+    it = 0
+
+    while it<=maxit
+
+        it += 1
+
+        t1 = time_ns()
+
+        r0 = F(z0, z0; set_future=true)
+
+        err_ε=norm(r0)
+
+        fun = u->F(u, z0; set_future=false)
+        dfun = u->df_A(F,u, z0; set_future=false)
+
+        sol = newton2(
+            fun, dfun,
+            z0, verbose=false
+        )
+
+        z1 = sol
+        δ = z1 - z0
+
+        #trace && push!(ti_trace.trace, z1) #
+
+        err_η = norm(δ)
+        gain = err_η / err_η_0
+        err_η_0 = err_η
+
+        # z0.data[:] .= z1.data
+        z0 = z1
+        
+        p = NaN
+
+        if gain>=1
+            p = NaN
+        elseif gain<1
+            p = Base.log(tol_η/err_η) / Base.log(λbar)
+        end
+
+        elapsed = time_ns() - t1
+
+        elapsed /= 1000000000
+
+        vector_time[it] = elapsed 
+
+        local avg_time
+        
+        avg_time = mean(vector_time[max(1,end-4):end])
+
+        time_left = NaN
+        if gain>=1
+            time_left = NaN
+            p = NaN
+        elseif gain<1
+            time_left = avg_time*p
+            p = round(Int, p) 
+        end
+
+     append!(log; 
+        verbose=verbose, 
+        it=it, 
+        err=err_ε, 
+        sa=err_η, 
+        lam=gain, 
+        elapsed=elapsed,
+        nb_it_before_convergence_of_x=p, 
+        remaining_time=time_left,
+     )
+
+     if err_ε<tol_ε     
+         break
+     end
+
+     if err_η<tol_η       
+         break 
+     end
+
+end
+
+ finalize(log, verbose=verbose)
+
+ res = TimeIterationResult(
+     F.dr.dr, 
+     it, 
+     complementarities, 
+     F.dprocess, 
+     err_ε, 
+     err_η, 
+     tol_ε, 
+     tol_η, 
+     λbar, 
+     p, 
+     log, 
+     ti_trace
+     )
+
+ return res
+
+end
 ```

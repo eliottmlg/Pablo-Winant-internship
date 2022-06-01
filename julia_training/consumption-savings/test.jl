@@ -255,3 +255,47 @@ if x>=1
 elseif x<1
     y = 4*x 
 end
+
+a=4
+b=5
+function compare(a, b)
+    a == b && return "equal to"
+    a < b ? "less than" : "greater than"
+end
+
+a == b && return "equal to"
+a < b ? "less than" : "greater than"
+
+ti_trace = trace ? IterationTrace([F.x0]) : nothing
+indeed = false
+a = indeed ? 3 : nothing
+
+c = Array{Union{Float64,Nothing},2}(nothing, 3, 2)
+c
+
+
+mutable struct concrete
+    pillar1::Array{Any,1}
+end
+mutable struct bridge
+    matrice1::Union{Nothing,concrete}
+end
+
+vector1 = [1, 1, 1]
+typeof(vector1)
+example = bridge(concrete(vector1))
+example
+example.matrice1.pillar1 = [1, 2, 3]
+example.matrice1.pillar1
+
+concrete(vector1)
+
+true && push!(example.matrice1.pillar1, 1) #
+pop!(example.matrice1.pillar1)
+
+vector1 = [1, 1, 1]
+length(vector1)
+
+beton = concrete(vector1)
+return beton
+

@@ -66,7 +66,7 @@ v_star(y) = c1 + c2 * (c3 - c4) + c4 * log(y)
 
 function verify_true_policy(m, shocks, c_star)
     k_grid = m.grid
-    c_star_new = colemand_egm(c_star, k_grid, m.β, m.u′, m.u′, m.f, m.f′, shocks)
+    c_star_new = coleman_egm(c_star, k_grid, m.β, m.u′, m.u′, m.f, m.f′, shocks)
 
     plt = plot()
     plot!(plt, k_grid, c_star.(k_grid), lw = 2, label = L"optimal policy $c^*$")
@@ -85,7 +85,7 @@ function convergence_check(m, shocks, c_star, g_init, n_iter)
     plot!(plt, m.grid, g.(m.grid),
     color = RGBA(0,0,0,1), lw = 2, alpha = 0.6, label = L"initial condition $c(y) = y$")
     for i in 1:n_iter
-        new_g = colemand_egm(g, k_grid, m.β, m.u′, m.u′, m.f, m.f′, shocks)
+        new_g = coleman_egm(g, k_grid, m.β, m.u′, m.u′, m.f, m.f′, shocks)
         g = new_g
         plot!(plt, k_grid, new_g.(k_grid), alpha = 0.6, color = RGBA(0,0,(i/n_iter),1), lw = 2, label = "")
     end
