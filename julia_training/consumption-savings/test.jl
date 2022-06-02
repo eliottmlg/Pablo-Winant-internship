@@ -341,3 +341,14 @@ sol
 
 matrice = [1 2 3; 4 5 6]
 matrice[:,2]
+
+
+# 
+function plottingDR(res)
+    grid = length(res.ti_trace)
+    DR = res.ti_trace
+
+    plt = plot()
+    plot!(plt, grid, DR, label = "decision rule")
+    plot!(plt, legend = :topleft)
+end
