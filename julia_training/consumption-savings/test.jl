@@ -299,3 +299,45 @@ length(vector1)
 beton = concrete(vector1)
 return beton
 
+
+
+# AxisArray
+
+V = AxisArray(rand(10); row='a':'j')  # AxisArray(rand(10), Axis{:row}('a':'j'))
+V[row='c'] == V[Axis{:row}('c')] == V[row=3] == V[3]
+AxisArrays.axes([1,2])
+rand(10)
+
+using Pkg; pkg"add AxisArrays Unitful"
+using AxisArrays, Unitful, Random
+fs = 40000;
+import Unitful: s, ms, µs
+rng = Random.MersenneTwister(123)
+y = randn(rng, 60*fs+1)*3
+
+for spk = (sin.(0.8:0.2:8.6) .* [0:0.01:.1; .15:.1:.95; 1:-.05:.05] .* 50,
+    sin.(0.8:0.4:8.6) .* [0:0.02:.1; .15:.1:1; 1:-.2:.1] .* 50)
+i = rand(rng, round(Int,.001fs):1fs)
+while i+length(spk)-1 < length(y)
+ y[i:i+length(spk)-1] += spk
+ i += rand(rng, round(Int,.001fs):1fs)
+end
+end
+
+A = AxisArray(hcat(y, 2 .* y); time = (0s:1s/fs:60s), chan = ([:c1, :c2]))
+hcat(y, 2 .* y)
+(0s:1s/fs:60s)
+([:c1, :c2])
+petit = 1/fs
+60/petit
+A[time=1]
+A[chan = :c2, time = 1:5]
+
+
+model.symbol
+show(stdout, "text/plain", model.symbols)
+sol = Dolo.time_iteration(model; trace = true)
+sol
+
+matrice = [1 2 3; 4 5 6]
+matrice[:,2]
