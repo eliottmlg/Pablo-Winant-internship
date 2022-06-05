@@ -352,3 +352,6 @@ function plottingDR(res)
     plot!(plt, grid, DR, label = "decision rule")
     plot!(plt, legend = :topleft)
 end
+
+
+# pull up request, loop for plotting, read paper, read endogenous grid points, 
