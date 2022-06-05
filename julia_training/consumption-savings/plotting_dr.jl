@@ -15,12 +15,22 @@ model = yaml_import(filename)
 sol = Dolo.time_iteration(model; trace = true)
 
 # plotting the decision rule (investment) as a function of the state variable (capital)
-tab = Dolo.tabulate(model, sol.dr, :k)
+tab = Dolo.tabulate(model, sol.trace.trace[4], :k)
+sol.dr
+dr = sol.trace.trace
 
+# when shock is iid, shock is not a state variable, vector of states is shorter, need different indexing
+plt = Plots.plot()
+for i=1:length(sol.trace.trace)
+    tab = Dolo.tabulate(model, sol.trace.trace[i], :k)
+    Plots.plot!(plt, tab[:k], tab[:i]; legend=false)
+end
+
+plt
 #plotting IRF of capital after an exogenous productivity shock
 IRF = Dolo.response(model, sol.dr, :e_z)
 plt = Plots.plot()
-Plots.plot!(plt, 1:40, IRF[:k], label = "IRF of capital")
+Plots.plot!(plt, 1:40, IRF[:i], label = "IRF of capital")
 Plots.plot!(plt, legend = :topright)
 
 
