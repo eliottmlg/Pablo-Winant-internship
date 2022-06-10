@@ -44,6 +44,7 @@ readlines(filename)
 model = yaml_import(filename)
 sol = Dolo.time_iteration(model; trace = true)
 # sol.dr 
+sol.dprocess
 decisionrule = sol.trace.trace
 function convergenceDR(decisionrule)
     dr = decisionrule

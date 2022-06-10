@@ -355,4 +355,42 @@ end
 
 # pull up request, loop for plotting, read paper, read endogenous grid points, 
 
+hello = 0.1
+random = UNormal(;σ=hello)
+new = discretize(random)
+uncertain = SVector(new.integration_nodes[:]...)
 
+
+exogenous = UNormal(;σ=0.1)
+dp = discretize(exogenous)
+x = SVector(dp.integration_nodes[:]...) # nodes 
+w = SVector(dp.integration_weights[:]...) # weights
+integration=(w, x)
+typeof(integration)
+length(integration)
+a_grid = range(0.0, 20; length=N=10)
+c_a = zeros(length(m.a_grid))
+(weights, nodes) = m.integration
+for (n,a) in enumerate(m.a_grid)
+    return n, a 
+end
+
+
+# stepping through pairs of from two sequences
+countries = ("Japan", "Korea", "China")
+cities = ("Tokyo", "Seoul", "Beijing")
+
+for (country, city) in zip(countries, cities)
+    println("The capital of $country is $city")
+end
+
+for (i, country) in enumerate(countries) # (index 1, country 1)
+    city = cities[i]
+    println("The capital of $country is $city")
+end
+
+vide = []
+
+x = 1
+either = x -> min(x, 1.0 + 0.01*(x-1.0))
+either # anonymous function named either 
