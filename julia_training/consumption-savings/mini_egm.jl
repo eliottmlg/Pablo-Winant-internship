@@ -127,23 +127,17 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
 
 end
 
-
-@time φ = egm(m; resample=true);
- 
+@time φ = egm(m; resample=true)
 xvec = range(0,10;length=100)
-
 plt = plot(xvec, xvec; xlims=(0,6))
 plot!(plt, xvec, min.(xvec,φ.(xvec)))
-plt
-
 
 
 φ = egm(m; resample=false)
 φs = egm(m; resample=true)
-
 plot(xvec, xvec; label="w")
-plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="endogenous")
-plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="fixed", xlabel="w", ylabel="c(w)")
+plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
+plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
 # read egm, consumption saving yaml sur dolo.py, chain de markov sur le revenu, ajouter shock exogene,
 
