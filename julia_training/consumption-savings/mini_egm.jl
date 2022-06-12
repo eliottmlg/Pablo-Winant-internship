@@ -139,11 +139,37 @@ plot(xvec, xvec; label="w")
 plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
 plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
+
+decisionrule = φ
+length(decisionrule)
+length(decisionrule[2])
+xvec
+length(φ.itp.knots[1])
+
+soltrace = egm(m; resample=false, trace = true) 
+sol = egm(m; resample=false)
+
+
+function convergenceEGM(soltrace, sol)
+        soltrace = soltrace
+        trace = soltrace[2]
+        sol = sol
+        plot() = plt
+        plot!(plt, xvec, xvec; label="w")
+    for i=1:10:length(trace)
+        plot!(plt, sol.itp.knots[1], trace[1])
+    end
+    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
+    plot!(plt, legend = :topright)
+end
+convergenceEGM(soltrace, sol)
+
 # read egm, consumption saving yaml sur dolo.py, chain de markov sur le revenu, ajouter shock exogene,
+
 
 φ = egm(m; resample=false, trace = true)
 φs = egm(m; resample=true, trace = true)
-DR = φ.trace.trace
+φ.logs
 DRresample = φs.itp.coefs
 function convergenceEGM(decisionrule)
     dr = decisionrule
