@@ -7,6 +7,22 @@ using StaticArrays
 using QuantEcon
 Pkg.add("StaticArrays")
 
+## constructing markov chain from AR1
+
+# from QuantEcon
+dpQE = QuantEcon.rouwenhorst(3, 0.9, 0.1, 0.0)
+
+# generating AR(1)
+VAR1(;ρ::Float64=0.0, Σ=ones(1,1)) = VAR1(ρ, Σ) 
+sigma = Array{Float64}(undef, 1, 1)
+sigma[1,1] = 0.1 
+ar1 = Dolo.VAR1(ρ = 0.9, Σ = sigma)
+
+# converting AR(1) into Markov chain
+mc = Dolo.discretize(ar1)
+typeof(mc)
+nodes = mc.values
+transitions = mc.transitions
 
 # We define the model here
 m = let
@@ -16,11 +32,21 @@ m = let
     σ_y = 0.1
     β = 0.96
     r = 1.038
-    p = (;β, γ, r, σ_y)
+    rho = 0.9 #
+    p = (;β, γ, r, σ_y, rho)
 
     # The following computes a set of nodes / weights
     #exogenous = UNormal(;σ=σ_y) # this shock is iid 
-    dp = discretize(exogenous)
+    #dp = discretize(exogenous)
+
+    # Markov process
+    sigma = Array{Float64}(undef, 1, 1)
+    sigma[1,1] = 0.1 
+    ar1 = Dolo.VAR1(ρ = 0.9, Σ = sigma)
+    dp = Dolo.discretize(ar1)
+    mc_states = dp.values
+    mc_transitions = dp.transitions
+
     x = SVector(dp.integration_nodes[:]...) # nodes 
     w = SVector(dp.integration_weights[:]...) # weights
 
@@ -34,43 +60,58 @@ m = let
     w_grid = range(0.8, 20; length=N) # the state-space
     a_grid = range(0.0, 20; length=N) # the post-states
     
-    (;p, φ=φ0, a_grid, w_grid, integration=(w, x))
+    (;p, φ=φ0, a_grid, w_grid, integration=(w, x), markovprocess=(mc_states,mc_transitions))
 
 end
 
-## constructing markov chain from AR1
-
-# from QuantEcon
-dpQE = QuantEcon.rouwenhorst(3, 0.9, 0.1, 0.0)
-
-# generating AR(1)
-VAR1(;ρ::Float64=0.0, Σ=ones(1,1)) = VAR1(ρ, Σ) 
-sigma = Array{Float64}(undef, 1, 1)
-sigma[1,1] = 0.1 
-m = Dolo.VAR1(ρ = 0.9, Σ = sigma)
-
-# converting AR(1) into Markov chain
-dp = Dolo.discretize(m)
+zeros(10)
+Matrix{Float64}(undef, 10, 10)
 
 function consumption_a(φ1, m)
     """Computes consumption at each point of the post-state grid given:
     - φ1: decision rule for consumption tomorrow
     - m:  model
     """
-    
-    c_a = zeros(length(m.a_grid))
-    
-    (weights, nodes) = m.integration
-    for (n,a) in enumerate(m.a_grid)
-        e = 0.0
-        for i in 1:length(weights) # # βREyu'(c'(M'))
-            w = weights[i] # probabilities of each nodes
-            ε = nodes[i] # nodes of the stochastic process
-            W = exp(ε) + a*m.p.r # M' = AR + y
+    #(weights, nodes) = m.integration
+    (states, transitions) = m.markovprocess
+
+    c_a = Matrix{Float64}(undef, length(states), length(m.a_grid))
+    #c_a = zeros(length(m.a_grid))
+
+    for i in 1:length(states)
+
+        for (n,a) in enumerate(m.a_grid)
+
+            rhs = 0.0
+
+            for j in 1:length(states)
+
+            Φ = zeros(length(states))
+
+            #e = 0.0
+            #for i in 1:length(weights) # # βREyu'(c'(M'))
+            #w = weights[i] # probabilities of each nodes
+            #ε = nodes[i] # nodes of the stochastic process
+
+            inc = states[j]
+            prob = transitions[i,j]
+
+            #W = exp(ε) + a*m.p.r # M' = AR + y
+
+            W = inc + a*m.p.r
             C = φ1(W) # c'(M') using c_(i-1)(.)
-            e += m.p.β*w*C^(-m.p.γ)*(m.p.r) 
-        end
-        c_a[n] = (e)^(-1.0/m.p.γ)
+
+            #e += m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
+
+            Φ[j] = m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
+
+            end
+
+        rhs = dot(Φ,transitions[i])
+
+        #c_a[n] = (e)^(-1.0/m.p.γ)
+        c_a[n, i] = (rhs)^(-1.0/m.p.γ)
+        
     end
 
 
