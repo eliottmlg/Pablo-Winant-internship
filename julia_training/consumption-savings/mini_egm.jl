@@ -41,7 +41,7 @@ end
 ## constructing markov chain from AR1
 
 # from QuantEcon
-dp = QuantEcon.rouwenhorst(3, 0.9, 0.1, 0.0)
+dpQE = QuantEcon.rouwenhorst(3, 0.9, 0.1, 0.0)
 
 # generating AR(1)
 VAR1(;ρ::Float64=0.0, Σ=ones(1,1)) = VAR1(ρ, Σ) 
