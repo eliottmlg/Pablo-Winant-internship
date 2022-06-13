@@ -85,9 +85,6 @@ function consumption_a(φ1, m)
 
 end
 
-phi0 = zeros(length(m.a_grid))
-consumption_a(c_a = zeros(length(m.a_grid)), m)
-
 
 function egm(m; φ=m.φ, T=500, trace=false, resample=false, 
     
@@ -132,7 +129,6 @@ xvec = range(0,10;length=100)
 plt = plot(xvec, xvec; xlims=(0,6))
 plot!(plt, xvec, min.(xvec,φ.(xvec)))
 
-
 φ = egm(m; resample=false)
 φs = egm(m; resample=true)
 plot(xvec, xvec; label="w")
@@ -140,50 +136,23 @@ plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
 plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
 
-decisionrule = φ
-length(decisionrule)
-length(decisionrule[2])
-xvec
-length(φ.itp.knots[1])
-
-soltrace = egm(m; resample=false, trace = true) 
-sol = egm(m; resample=false)
-
-
+# plotting 
+@time soltrace = egm(m; resample=true, trace = true) 
+@time sol = egm(m; resample=true)
+xvec = range(0,10;length=100)
 function convergenceEGM(soltrace, sol)
         soltrace = soltrace
         trace = soltrace[2]
         sol = sol
-        plot() = plt
-        plot!(plt, xvec, xvec; label="w")
-    for i=1:10:length(trace)
-        plot!(plt, sol.itp.knots[1], trace[1])
+        plt = plot()
+        plot!(plt, xvec, xvec; label="w", ylims=(0,1.5))
+    for i=1:20:length(trace)
+        plot!(plt, sol.itp.ranges[1], trace[i]; marker= "o")
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
-    plot!(plt, legend = :topright)
+    plot!(plt, legend = false)
 end
 convergenceEGM(soltrace, sol)
 
-# read egm, consumption saving yaml sur dolo.py, chain de markov sur le revenu, ajouter shock exogene,
+# replace iid shock with markov chain
 
-
-φ = egm(m; resample=false, trace = true)
-φs = egm(m; resample=true, trace = true)
-φ.logs
-DRresample = φs.itp.coefs
-function convergenceEGM(decisionrule)
-    dr = decisionrule
-    tab = Dolo.tabulate(model, dr[1], :w)
-    plt = Plots.plot()
-    plot!(plt,  tab[:w], tab[:c], color = RGBA(0,0,0,1), label = L"initial condition $c(w) = constant$")
-    for i=2:10:length(dr)
-        tab = Dolo.tabulate(model,
-         dr[i], :w)
-        Plots.plot!(plt, tab[:w], tab[:c]; label = [i], legend=false)
-    end
-    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
-    plot!(plt, legend = :bottomright)
-end
-convergenceDR(decisionrule)
-
-# quand on cree un processus, prob de transition, knoeus, 
