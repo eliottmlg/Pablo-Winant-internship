@@ -2,15 +2,11 @@ using Pkg
 using Interpolations
 using Plots
 using Dolo: UNormal, discretize  # dependence on Dolo is actually quite minimal, we just use the exogenous shock
+using Dolo
 using StaticArrays
+using QuantEcon
 Pkg.add("StaticArrays")
 
-
-#=
-structure m qui defini le model a resoudre, methode de resolution qui ne suppose rien sur le model
-# 1 var etat, 1 Control 
-# let : en dors de let, 
-=#
 
 # We define the model here
 m = let
@@ -23,7 +19,7 @@ m = let
     p = (;β, γ, r, σ_y)
 
     # The following computes a set of nodes / weights
-    exogenous = UNormal(;σ=σ_y)
+    #exogenous = UNormal(;σ=σ_y) # this shock is iid 
     dp = discretize(exogenous)
     x = SVector(dp.integration_nodes[:]...) # nodes 
     w = SVector(dp.integration_weights[:]...) # weights
@@ -42,21 +38,19 @@ m = let
 
 end
 
-#=
-NamedTuple 
-t = (3, "JI")
-length(t) # on ne peut pas modifer elements de T
- # variante NamedTuple, avec des mots cle 
- t = (a = 4, b = 3)
- t.a 
- # add LabelledArrays, se comporte comme un vector 
- # synthaxe pour creer NamedTuple 
+## constructing markov chain from AR1
 
- m.integration
- a = w-c 
- si on connait c sur la grille de ai on connait c sur la grille de wi
-=#
+# from QuantEcon
+dp = QuantEcon.rouwenhorst(3, 0.9, 0.1, 0.0)
 
+# generating AR(1)
+VAR1(;ρ::Float64=0.0, Σ=ones(1,1)) = VAR1(ρ, Σ) 
+sigma = Array{Float64}(undef, 1, 1)
+sigma[1,1] = 0.1 
+m = Dolo.VAR1(ρ = 0.9, Σ = sigma)
+
+# converting AR(1) into Markov chain
+dp = Dolo.discretize(m)
 
 function consumption_a(φ1, m)
     """Computes consumption at each point of the post-state grid given:
