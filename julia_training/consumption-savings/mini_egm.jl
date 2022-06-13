@@ -36,36 +36,36 @@ m = let
     p = (;β, γ, r, σ_y, rho)
 
     # The following computes a set of nodes / weights
-    #exogenous = UNormal(;σ=σ_y) # this shock is iid 
-    #dp = discretize(exogenous)
+    exogenous = UNormal(;σ=σ_y) # this shock is iid 
+    dp = discretize(exogenous)
 
     # Markov process
     sigma = Array{Float64}(undef, 1, 1)
     sigma[1,1] = 0.1 
     ar1 = Dolo.VAR1(ρ = 0.9, Σ = sigma)
-    dp = Dolo.discretize(ar1)
-    mc_states = dp.values
-    mc_transitions = dp.transitions
+    mc = Dolo.discretize(ar1)
+    states = mc.values
+    transitions = mc.transitions
 
     x = SVector(dp.integration_nodes[:]...) # nodes 
     w = SVector(dp.integration_weights[:]...) # weights
 
     # Initial decision rule (consumption as a function of available wealth)
-    φ0 = w -> min(w, 1.0 + 0.01*(w-1.0))
-
-#fonction qui a w associe 
+    φ0 = Vector{Any}(undef, 3)
+    for i in 1:length(states)
+    φ0[i] = w -> min(w, 1.0 + 0.01*(w-1.0))
+    end 
+    φ0 = reduce(hcat, φ0)
 
     # This is the discretization of...
     N = 10
     w_grid = range(0.8, 20; length=N) # the state-space
     a_grid = range(0.0, 20; length=N) # the post-states
     
-    (;p, φ=φ0, a_grid, w_grid, integration=(w, x), markovprocess=(mc_states,mc_transitions))
+    (;p, φ=φ0, a_grid, w_grid, integration=(w, x), markovprocess=(states, transitions))
 
 end
 
-zeros(10)
-Matrix{Float64}(undef, 10, 10)
 
 function consumption_a(φ1, m)
     """Computes consumption at each point of the post-state grid given:
@@ -82,7 +82,7 @@ function consumption_a(φ1, m)
 
         for (n,a) in enumerate(m.a_grid)
 
-            rhs = 0.0
+            rhs = zeros(length(states))
 
             for j in 1:length(states)
 
@@ -101,7 +101,7 @@ function consumption_a(φ1, m)
             W = inc + a*m.p.r
             C = φ1(W) # c'(M') using c_(i-1)(.)
 
-            #e += m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
+            #e += m.p.β * w * C^(-m.p.γ)*(m.p.r) 
 
             Φ[j] = m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
 
@@ -111,10 +111,8 @@ function consumption_a(φ1, m)
 
         #c_a[n] = (e)^(-1.0/m.p.γ)
         c_a[n, i] = (rhs)^(-1.0/m.p.γ)
-        
+
     end
-
-
 
     return c_a
 
@@ -137,11 +135,15 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
     φ0 = φ
     
     for t in 1:T
-        trace ? push!(logs, deepcopy(φ0)) : nothing
-        c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
-        w_grid = a_grid + c_a # M_new = A + c_new
-        c_a = min(w_grid, c_a) # c_new cannot exceed M
-        φ0 = LinearInterpolation(w_grid, c_a; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
+        for i in 1:length(states)
+                
+            trace ? push!(logs, deepcopy(φ0)) : nothing
+            c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
+            w_grid = a_grid + c_a[:,i] # M_new = A + c_new
+            c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
+            φ0 = LinearInterpolation(w_grid, c_a; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
+        
+        end
     end
 
     if resample

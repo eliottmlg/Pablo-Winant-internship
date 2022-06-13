@@ -368,6 +368,9 @@ w = SVector(dp.integration_weights[:]...) # weights
 integration=(w, x)
 typeof(integration)
 length(integration)
+
+lol = w -> min(w, 1.0 + 0.01*(w-1.0))
+
 a_grid = range(0.0, 20; length=N=10)
 c_a = zeros(length(m.a_grid))
 (weights, nodes) = m.integration
@@ -394,3 +397,23 @@ vide = []
 x = 1
 either = x -> min(x, 1.0 + 0.01*(x-1.0))
 either # anonymous function named either 
+
+
+
+
+
+a = [[1,2], [2,3], [3,4]]
+reduce(hcat, a)
+z = zeros(2)
+zeroo = [z, z]
+reduce(hcat, zeroo)
+zeros(10)
+Matrix{Float64}(undef, 10, 10)
+
+hello = Vector{Vector{Float64}}(undef, 3)
+for i in 1:3
+    hello[i] = [1,2,3]
+end
+hello
+reduce(hcat, hello)
+
