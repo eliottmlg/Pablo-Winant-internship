@@ -369,6 +369,19 @@ integration=(w, x)
 typeof(integration)
 length(integration)
 
+φ = w -> min(w, 1.0 + 0.01*(w-1.0))
+φ1 = φ  # it is a anonymous function, not a vector
+C = φ1(3)
+
+φ0 = Vector{Any}(undef, 3)
+φ0
+for i in 1:3
+φ0[i] = w -> min(w, 1.0 + 0.01*(w-1.0))
+end 
+φ0
+φ0 = reduce(hcat, φ0)
+φ0[1,1](4)
+
 lol = w -> min(w, 1.0 + 0.01*(w-1.0))
 
 a_grid = range(0.0, 20; length=N=10)
@@ -415,5 +428,15 @@ for i in 1:3
     hello[i] = [1,2,3]
 end
 hello
-reduce(hcat, hello)
+ca = reduce(hcat, hello)
 
+
+c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
+for i in 1:3 
+    w_grid = a_grid + c_a[:,i] # M_new = A + c_new
+    c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
+    φ0 = LinearInterpolation(w_grid, c_a; extrapolation_bc=Line())   
+end
+
+
+LinearAlgebra.dim(ca)
