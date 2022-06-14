@@ -5,6 +5,7 @@ using Dolo: UNormal, discretize  # dependence on Dolo is actually quite minimal,
 using Dolo
 using StaticArrays
 using QuantEcon
+using LinearAlgebra
 Pkg.add("StaticArrays")
 
 ## constructing markov chain from AR1
@@ -36,33 +37,37 @@ m = let
     p = (;β, γ, r, σ_y, rho)
 
     # The following computes a set of nodes / weights
-    exogenous = UNormal(;σ=σ_y) # this shock is iid 
-    dp = discretize(exogenous)
+ #   exogenous = UNormal(;σ=σ_y) # this shock is iid 
+ #   dp = discretize(exogenous)
 
     # Markov process
     sigma = Array{Float64}(undef, 1, 1)
-    sigma[1,1] = 0.1 
-    ar1 = Dolo.VAR1(ρ = 0.9, Σ = sigma)
-    mc = Dolo.discretize(ar1)
+    sigma[1,1] = 0.01
+    ar1 = Dolo.VAR1(ρ = 0.95, Σ = sigma)
+    mc = Dolo.discretize(ar1; n=9)
     states = mc.values
     transitions = mc.transitions
 
-    x = SVector(dp.integration_nodes[:]...) # nodes 
+    #=
+    x = SVector(dp.integration_nodes[:]...) # nodes  
     w = SVector(dp.integration_weights[:]...) # weights
+    =#
 
     # Initial decision rule (consumption as a function of available wealth)
-    φ0 = Vector{Any}(undef, 3)
-    for i in 1:length(states)
+    #φ0 = w -> min(w, 1.0 + 0.01*(w-1.0))
+    φ0 = Vector{Any}(undef, 9)
+    for i in 1:size(states,1)
     φ0[i] = w -> min(w, 1.0 + 0.01*(w-1.0))
-    end 
-    φ0 = reduce(hcat, φ0)
+    end
+    φ0  # vector of length 3 of anonymous functions
+    #φ0 = reduce(hcat, φ0) # into matrix
 
     # This is the discretization of...
-    N = 10
+    N = 100
     w_grid = range(0.8, 20; length=N) # the state-space
     a_grid = range(0.0, 20; length=N) # the post-states
     
-    (;p, φ=φ0, a_grid, w_grid, integration=(w, x), markovprocess=(states, transitions))
+    (;p, φ=φ0, a_grid, w_grid, markovprocess=(states, transitions))
 
 end
 
@@ -75,47 +80,44 @@ function consumption_a(φ1, m)
     #(weights, nodes) = m.integration
     (states, transitions) = m.markovprocess
 
-    c_a = Matrix{Float64}(undef, length(states), length(m.a_grid))
+    c_a = Matrix{Float64}(undef, length(m.a_grid), size(states,1))
     #c_a = zeros(length(m.a_grid))
 
-    for i in 1:length(states)
+    for i in 1:size(states,1)
 
         for (n,a) in enumerate(m.a_grid)
 
-            rhs = zeros(length(states))
+            rhs = zeros(size(states,1))
+            Φ = zeros(size(states,1))
 
-            for j in 1:length(states)
+            for j in 1:size(states,1)
 
-            Φ = zeros(length(states))
+                #e = 0.0
+                #for i in 1:length(weights) # # βREyu'(c'(M'))
+                #w = weights[i] # probabilities of each nodes
+                #ε = nodes[i] # nodes of the stochastic process
 
-            #e = 0.0
-            #for i in 1:length(weights) # # βREyu'(c'(M'))
-            #w = weights[i] # probabilities of each nodes
-            #ε = nodes[i] # nodes of the stochastic process
+                inc = states[j,1]
+                prob = transitions[i,j]
 
-            inc = states[j]
-            prob = transitions[i,j]
+                #W = exp(ε) + a*m.p.r # M' = AR + y
 
-            #W = exp(ε) + a*m.p.r # M' = AR + y
+                W = exp(inc) + a*m.p.r # exp
+                C = φ1[j](W) # c'(M') using c_(i-1)(.)    j au lieu de i
 
-            W = inc + a*m.p.r
-            C = φ1(W) # c'(M') using c_(i-1)(.)
+                #e += m.p.β * w * C^(-m.p.γ)*(m.p.r) 
 
-            #e += m.p.β * w * C^(-m.p.γ)*(m.p.r) 
-
-            Φ[j] = m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
+                Φ[j] = m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
 
             end
 
-        rhs = dot(Φ,transitions[i])
+            rhs = LinearAlgebra.dot(Φ, transitions[i,:])
 
-        #c_a[n] = (e)^(-1.0/m.p.γ)
-        c_a[n, i] = (rhs)^(-1.0/m.p.γ)
-
+            #c_a[n] = (e)^(-1.0/m.p.γ)
+            c_a[n, i] = (rhs)^(-1.0/m.p.γ)
+        end 
     end
-
-    return c_a
-
+    return c_a # matrix length(a_grid) x length(states) containing updated consumption levels (Float64)
 end
 
 
@@ -127,6 +129,7 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
     - m: model
     """
 
+    states = m.markovprocess[1]
     logs = [] # to keep all successive decision rules
 
     local w_grid, c_a, φ0
@@ -135,46 +138,59 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
     φ0 = φ
     
     for t in 1:T
-        for i in 1:length(states)
+        trace ? push!(logs, deepcopy(φ0)) : nothing
+        c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
+        
+        for i in 1:size(states,1)
                 
-            trace ? push!(logs, deepcopy(φ0)) : nothing
-            c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
             w_grid = a_grid + c_a[:,i] # M_new = A + c_new
             c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
-            φ0 = LinearInterpolation(w_grid, c_a; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
+            φ0[i] = LinearInterpolation(w_grid, c_a[:,i]; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
         
         end
     end
 
     if resample
-        # we resample the solution so that it interpolates exactly
-        # on the grid specified in m.w_grid (not the endogenous one.)
-        nx = φ0(m.w_grid)
-        φ0 = LinearInterpolation(m.w_grid, nx; extrapolation_bc=Line())
+        for i in 1:size(states,1)
+            # we resample the solution so that it interpolates exactly
+            # on the grid specified in m.w_grid (not the endogenous one.)
+            nx = φ0[i](m.w_grid)
+            φ0[i] = LinearInterpolation(m.w_grid, nx; extrapolation_bc=Line())
+        end
     end
 
     if trace
         return φ0, logs, w_grid, c_a
     else
-        return φ0
+        return φ0 # 3-element vector, each element is a object linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
     end
 
 end
 
-@time φ = egm(m; resample=true)
-xvec = range(0,10;length=100)
-plt = plot(xvec, xvec; xlims=(0,6))
-plot!(plt, xvec, min.(xvec,φ.(xvec)))
+@time φs = egm(m; resample=true)
+function result(φs)
+    xvec = range(0,10;length=10)
+    plt = plot(xvec, xvec; xlims=(0,10))
+    for i in 1:length(m.markovprocess[1])
+        x = φs[i].itp.ranges[1]
+        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i](x)); marker= "o", xlabel="State w", ylabel="Control c(w)")
+    end
+    plt
+end 
+result(φs)
 
+
+## Plots
+# fixed vs endogeneous
 φ = egm(m; resample=false)
 φs = egm(m; resample=true)
 plot(xvec, xvec; label="w")
 plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
 plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
-
-# plotting 
-@time soltrace = egm(m; resample=true, trace = true) 
+# iterations
+@time soltr
+ace = egm(m; resample=true, trace = true) 
 @time sol = egm(m; resample=true)
 xvec = range(0,10;length=100)
 function convergenceEGM(soltrace, sol)
