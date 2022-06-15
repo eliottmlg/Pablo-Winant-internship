@@ -162,7 +162,7 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
     if trace
         return φ0, logs, w_grid, c_a
     else
-        return φ0 # 3-element vector, each element is a object linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
+        return φ0 # 3-element vector, each element is an object of linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
     end
 
 end

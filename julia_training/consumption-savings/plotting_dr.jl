@@ -46,14 +46,21 @@ sol = Dolo.time_iteration(model; trace = true)
 # sol.dr 
 sol.dprocess
 decisionrule = sol.trace.trace
+
+xvec = range(0,10;length=100)
+dr = decisionrule
+tab = Dolo.tabulate(model, dr[1], :w)
+w_grid = tab[:w]
+
 function convergenceDR(decisionrule)
     dr = decisionrule
     tab = Dolo.tabulate(model, dr[1], :w)
+    w_grid = tab[:w]
     plt = Plots.plot()
-    plot!(plt,  tab[:w], tab[:c], color = RGBA(0,0,0,1), label = L"initial condition $c(w) = constant$")
+    plot!(plt, w_grid, w_grid; ylims = (0,2))
+    plot!(plt,  w_grid, tab[:c], color = RGBA(0,0,0,1), label = L"initial condition $c(w) = constant$")
     for i=2:10:length(dr)
-        tab = Dolo.tabulate(model,
-         dr[i], :w)
+        tab = Dolo.tabulate(model, dr[i], :w)
         Plots.plot!(plt, tab[:w], tab[:c]; label = [i], legend=false)
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
