@@ -119,10 +119,11 @@ function convergenceEGM(soltrace, sol)
         soltrace = soltrace
         trace = soltrace[2]
         sol = sol
+        w = sol.itp.ranges[1]
         plt = plot()
         plot!(plt, xvec, xvec; label="w", ylims=(0,10))
-    for i=1:20:length(trace)
-        plot!(plt, sol.itp.ranges[1], trace[i]; marker= "o")
+    for i=1:length(trace)
+        plot!(plt, w, min(w,trace[i](w)); marker= "o")
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
     plot!(plt, legend = false)

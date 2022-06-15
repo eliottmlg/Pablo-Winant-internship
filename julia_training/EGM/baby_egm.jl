@@ -13,13 +13,13 @@ m = let
     # parameter calibration
 
     γ = 4.0   
-    σ_y = 0.01
+    σ_y = 0.1
     β = 0.96
-    r = 1.038
-    rho = 0.95
+    r = 1.02
+    rho = 0.9
     N_mc = 3
     sigma = Array{Float64}(undef, 1, 1)
-    sigma[1,1] = σ_y
+    sigma[1,1] = σ_y^2
     p = (;β, γ, r, σ_y, rho)
 
     # Markov process
@@ -36,9 +36,9 @@ m = let
     φ0  # vector of length 3 of anonymous functions
 
     # This is the discretization of...
-    N = 100
-    w_grid = range(0.8, 20; length=N) # the state-space
-    a_grid = range(0.0, 20; length=N) # the post-states
+    N = 50
+    w_grid = range(0.01, 4; length=N) # the state-space
+    a_grid = range(0.01, 4; length=N) # the post-states
     
     (;p, φ=φ0, a_grid, w_grid, markovprocess=(states, transitions))
 
@@ -125,11 +125,11 @@ end
 
 @time φs = egm(m; resample=true)
 function result(φs)
-    xvec = range(0,10;length=10)
-    plt = plot(xvec, xvec; xlims=(0,10), xlabel="State w", ylabel="Control c(w)")
+    xvec = range(0,10;length=50)
+    plt = plot(xvec, xvec; xlims=(0,5), xlabel="State w", ylabel="Control c(w)")
     for i in 1:length(m.markovprocess[1])
         x = φs[i].itp.ranges[1]
-        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i](x)); marker= "o")
+        plt = plot!(φs[i].itp.ranges[1], φs[i](x); marker= "o")
     end
     plt
 end 
