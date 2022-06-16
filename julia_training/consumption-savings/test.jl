@@ -439,4 +439,42 @@ for i in 1:3
 end
 
 
-LinearAlgebra.dim(ca)
+@time φt = egm(m; resample=true, trace = true)
+φt[1].itp.knots # error this obejct does not exist with trace 
+φt[1][1].itp.ranges # ranges with resample
+@time φs = egm(m; resample=true)
+φs[1].itp.ranges
+φs[2].itp.ranges[1]
+φs[9].itp.ranges[1]
+(20-0.8)/.1939 # approx 100, length of grid
+φs
+@time φ = egm(m; resample=false)
+φ[1].itp.knots[1]
+
+
+φt[2][1][5][1]
+length(φt[2])
+φt[2]
+φt[2][1][1]
+φt[2][500][1]
+
+
+length(φt)
+φt.w_grid
+φt[1] # 3-element vector, for each markov states, each element is a 50-element vector, consumption decision on the grid of 50 points
+φt[2] # 500-element vector, for 500 iterations, each element is a 50-element vector
+φt[3] # 50-element vector, each element is a number, w_grid at the 500th iteration!
+φt[2][500] # 3-element vector, last iteration, for each markov states, consumption along the grid 
+φt[2][500][1]
+φt[4] # 50x3 matrix, c_a at the 500th iteration
+φt[4][:,1]
+φt[1][1]-φt[4][:,1] # why not the same ?
+
+
+x = φs[1].itp.ranges[1]
+xvec = range(0,m.w_grid[m.N];length=50)
+m.w_grid
+m.a_grid
+m.markovprocess[1]
+
+

@@ -18,9 +18,10 @@ m = let
     r = 1.02
     rho = 0.9
     N_mc = 3
+    cbar = 0.9
     sigma = Array{Float64}(undef, 1, 1)
     sigma[1,1] = σ_y^2
-    p = (;β, γ, r, σ_y, rho)
+    p = (;β, γ, r, σ_y, rho, N_mc, cbar, sigma)
 
     # Markov process
     ar1 = Dolo.VAR1(ρ = rho, Σ = sigma)
@@ -33,14 +34,14 @@ m = let
     for i in 1:size(states,1)
     φ0[i] = w -> min(w, 1.0 + 0.01*(w-1.0))
     end
-    φ0  # vector of length 3 of anonymous functions
+    φ0  # vector of length nb_of_markov_states of anonymous functions
 
     # This is the discretization of...
     N = 50
     w_grid = range(0.01, 4; length=N) # the state-space
     a_grid = range(0.01, 4; length=N) # the post-states
     
-    (;p, φ=φ0, a_grid, w_grid, markovprocess=(states, transitions))
+    (;p, φ=φ0, a_grid, w_grid, N, markovprocess=(states, transitions))
 
 end
 
@@ -67,12 +68,12 @@ function consumption_a(φ1, m)
                 prob = transitions[i,j]
                 W = exp(inc) + a*m.p.r # M' = AR + y
                 C = φ1[j](W) # c'(M') using c_(i-1)(.)  
-                Φ[j] = m.p.β * prob * C^(-m.p.γ)*(m.p.r) 
+                Φ[j] = m.p.β * prob * (C/m.p.cbar)^(-m.p.γ) * (m.p.r) 
 
             end
 
             rhs = LinearAlgebra.dot(Φ, transitions[i,:])
-            c_a[n, i] = (rhs)^(-1.0/m.p.γ)
+            c_a[n, i] = m.p.cbar * (rhs)^(-1.0/m.p.γ)
         end 
     end
     return c_a # matrix length(a_grid) x length(states) containing updated consumption levels (Float64)
@@ -98,8 +99,7 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
         trace ? push!(logs, deepcopy(φ0)) : nothing
         c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
         
-        for i in 1:size(states,1)
-                
+        for i in 1:size(states,1) 
             w_grid = a_grid + c_a[:,i] # M_new = A + c_new
             c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
             φ0[i] = LinearInterpolation(w_grid, c_a[:,i]; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
@@ -123,16 +123,34 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
 
 end
 
+#Results along markov states
 @time φs = egm(m; resample=true)
 function result(φs)
-    xvec = range(0,10;length=50)
-    plt = plot(xvec, xvec; xlims=(0,5), xlabel="State w", ylabel="Control c(w)")
+    xvec = range(0,m.w_grid[m.N];length=50)
+    x = φs[1].itp.ranges[1] # grid for resample (same along markov states), for not resample φs[i].itp.knots[1]
+    plt = plot(xvec, xvec; xlims=(0,4), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
     for i in 1:length(m.markovprocess[1])
-        x = φs[i].itp.ranges[1]
-        plt = plot!(φs[i].itp.ranges[1], φs[i](x); marker= "o")
+        plt = plot!(x, min.(x,φs[i](x)); marker= "o")
+        plt = plot!(x, φs[i]; marker= "o")
     end
     plt
 end 
 result(φs)
 
-
+# iterations GOOD for fixed markov state
+@time soltrace = egm(m; resample=true, trace = true) 
+xvec = range(0,4;length=100)
+function convergenceEGM(soltrace)
+        soltrace = soltrace
+        log = soltrace[2]
+        x = soltrace[1][1].itp.ranges[1]
+        plt = plot()
+        plot!(plt, xvec, xvec; label="w", ylims=(0,4))
+    for i=2:20:length(log)
+        plot!(plt, x, min.(x,log[i][2]); marker= "o")
+        plot!(plt, x, min.(x, log[i][2](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
+    end
+    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
+    plot!(plt, legend = true)
+end
+convergenceEGM(soltrace)

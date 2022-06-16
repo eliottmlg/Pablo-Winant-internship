@@ -111,21 +111,20 @@ plot(xvec, xvec; label="w")
 plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
 plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
-# iterations
+# iterations GOOD
 @time soltrace = egm(m; resample=true, trace = true) 
 @time sol = egm(m; resample=true)
 xvec = range(0,10;length=100)
-function convergenceEGM(soltrace, sol)
+function convergenceEGM(soltrace)
         soltrace = soltrace
         trace = soltrace[2]
-        sol = sol
-        w = sol.itp.ranges[1]
+        w = soltrace[1].itp.ranges[1]
         plt = plot()
         plot!(plt, xvec, xvec; label="w", ylims=(0,10))
     for i=1:length(trace)
-        plot!(plt, w, min(w,trace[i](w)); marker= "o")
+        plot!(plt, w, min.(w,trace[i](w)); marker= "o")
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
     plot!(plt, legend = false)
 end
-convergenceEGM(soltrace, sol)
+convergenceEGM(soltrace)

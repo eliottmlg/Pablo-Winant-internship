@@ -67,7 +67,7 @@ m = let
     w_grid = range(0.8, 20; length=N) # the state-space
     a_grid = range(0.0, 20; length=N) # the post-states
     
-    (;p, φ=φ0, a_grid, w_grid, markovprocess=(states, transitions))
+    (;p, φ=φ0, a_grid, w_grid, N, markovprocess=(states, transitions))
 
 end
 
@@ -179,6 +179,23 @@ function result(φs)
 end 
 result(φs)
 
+# Results comparing interpolation argument
+function result(φs)
+    xvec = range(0,m.w_grid[m.N];length=50)
+    plt = plot(xvec, xvec; xlims=(0,10), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
+    for i in 1:length(m.markovprocess[1])
+        x = φs[i].itp.ranges[1]
+        #plt = plot!(φs[i].itp.ranges[1], φs[i](x); marker= "o")
+        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i](x)); markershape=:star5)
+        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i]); marker= "o")
+    end
+    plt
+end 
+result(φs) 
+
+x = φs[1].itp.ranges[1]
+φs[1](x)
+φs[1]
 
 ## Plots
 # fixed vs endogeneous
@@ -188,24 +205,24 @@ plot(xvec, xvec; label="w")
 plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
 plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
 
-# iterations
-@time soltr
-ace = egm(m; resample=true, trace = true) 
-@time sol = egm(m; resample=true)
-xvec = range(0,10;length=100)
-function convergenceEGM(soltrace, sol)
+# iterations GOOD
+@time soltrace = egm(m; resample=true, trace = true) 
+xvec = range(0,20;length=100)
+function convergenceEGM(soltrace)
         soltrace = soltrace
-        trace = soltrace[2]
-        sol = sol
+        log = soltrace[2]
+        x = soltrace[1][1].itp.ranges[1]
         plt = plot()
-        plot!(plt, xvec, xvec; label="w", ylims=(0,1.5))
-    for i=1:20:length(trace)
-        plot!(plt, sol.itp.ranges[1], trace[i]; marker= "o")
+        plot!(plt, xvec, xvec; label="w", ylims=(0,20))
+    for i=2:20:length(log)
+        plot!(plt, x, min.(x,log[i][5]); marker= "o")
+        plot!(plt, x, min.(x, log[i][5](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
-    plot!(plt, legend = false)
+    plot!(plt, legend = true)
 end
-convergenceEGM(soltrace, sol)
+convergenceEGM(soltrace)
+
 
 # replace iid shock with markov chain
 
