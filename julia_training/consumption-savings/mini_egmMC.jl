@@ -111,7 +111,8 @@ function consumption_a(φ1, m)
 
             end
 
-            rhs = LinearAlgebra.dot(Φ, transitions[i,:])
+            #rhs = LinearAlgebra.dot(Φ, transitions[i,:])
+            rhs = sum(transitions[i,j]*Φ[j] for j=1:size(states,1))
 
             #c_a[n] = (e)^(-1.0/m.p.γ)
             c_a[n, i] = (rhs)^(-1.0/m.p.γ)
@@ -131,14 +132,17 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
 
     states = m.markovprocess[1]
     logs = [] # to keep all successive decision rules
+    logs_grids = []
 
     local w_grid, c_a, φ0
     a_grid = m.a_grid
 
     φ0 = φ
+    w_grid = m.w_grid
     
     for t in 1:T
         trace ? push!(logs, deepcopy(φ0)) : nothing
+        trace ? push!(logs_grids, deepcopy(w_grid)) : nothing
         c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
         
         for i in 1:size(states,1)
@@ -160,13 +164,14 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
     end
 
     if trace
-        return φ0, logs, w_grid, c_a
+        return φ0, logs, w_grid, c_a, logs_grids
     else
         return φ0 # 3-element vector, each element is an object of linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
     end
 
 end
 
+# results GOOD
 @time φs = egm(m; resample=true)
 function result(φs)
     xvec = range(0,10;length=10)
@@ -179,23 +184,19 @@ function result(φs)
 end 
 result(φs)
 
-# Results comparing interpolation argument
+# Results comparing interpolation argument, GOOD but flat
 function result(φs)
     xvec = range(0,m.w_grid[m.N];length=50)
     plt = plot(xvec, xvec; xlims=(0,10), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
     for i in 1:length(m.markovprocess[1])
         x = φs[i].itp.ranges[1]
         #plt = plot!(φs[i].itp.ranges[1], φs[i](x); marker= "o")
-        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i](x)); markershape=:star5)
-        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i]); marker= "o")
+        plt = plot!(x, min.(x,φs[i](x)); markershape=:star5)
+        plt = plot!(x, min.(x,φs[i]); marker= "o")
     end
     plt
 end 
 result(φs) 
-
-x = φs[1].itp.ranges[1]
-φs[1](x)
-φs[1]
 
 ## Plots
 # fixed vs endogeneous
@@ -207,22 +208,39 @@ plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xla
 
 # iterations GOOD
 @time soltrace = egm(m; resample=true, trace = true) 
-xvec = range(0,20;length=100)
+@time soltrace = egm(m; resample=false, trace = true) 
 function convergenceEGM(soltrace)
         soltrace = soltrace
         log = soltrace[2]
-        x = soltrace[1][1].itp.ranges[1]
+        xvec = range(0,20;length=100)
+        x = soltrace[1][4].itp.ranges[1] # true, chosen the 4th markov states
+        #x = soltrace[1][i].itp.knots[1] # false
         plt = plot()
         plot!(plt, xvec, xvec; label="w", ylims=(0,20))
-    for i=2:20:length(log)
-        plot!(plt, x, min.(x,log[i][5]); marker= "o")
-        plot!(plt, x, min.(x, log[i][5](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
+    for i=1:20:length(log)
+        # plot!(plt, x, min.(x,log[i][4]); marker= "o") # 4th markov state
+        plot!(plt, x, min.(x, log[i][4](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
     plot!(plt, legend = true)
 end
 convergenceEGM(soltrace)
 
+soltrace[1][1].itp.ranges[1]
+soltrace[2][4][1](soltrace[1][1].itp.ranges[1])
+soltrace[1][3].itp.knots[1]
+soltrace[2][500][5]
+soltrace[1][9].itp.knots[1]
+soltrace[5][500]
 
+soltrace[2][500][4]-soltrace[1][4] # almost zero
+soltrace[2][2][4]-soltrace[2][500][4] # almost zero
+# it seems the decision rule converges extremely fast
+# OR the logs captures the same values for the 
+# 2nd iteration throughout the 500th 
+
+soltrace[2][500][9](soltrace[5][500])
+soltrace[2][500][9]
+soltrace[1][1]
 # replace iid shock with markov chain
 

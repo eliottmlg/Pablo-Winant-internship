@@ -123,7 +123,7 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
 
 end
 
-#Results along markov states
+#Results along markov states NOT GOOD
 @time φs = egm(m; resample=true)
 function result(φs)
     xvec = range(0,m.w_grid[m.N];length=50)
@@ -137,7 +137,7 @@ function result(φs)
 end 
 result(φs)
 
-# iterations GOOD for fixed markov state
+# iterations for fixed markov state NOT GOOD
 @time soltrace = egm(m; resample=true, trace = true) 
 xvec = range(0,4;length=100)
 function convergenceEGM(soltrace)
@@ -146,7 +146,7 @@ function convergenceEGM(soltrace)
         x = soltrace[1][1].itp.ranges[1]
         plt = plot()
         plot!(plt, xvec, xvec; label="w", ylims=(0,4))
-    for i=2:20:length(log)
+    for i=1:20:length(log)
         plot!(plt, x, min.(x,log[i][2]); marker= "o")
         plot!(plt, x, min.(x, log[i][2](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
     end
