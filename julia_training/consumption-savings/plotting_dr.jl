@@ -9,7 +9,7 @@ using Plots
 using LaTeXStrings
 
 # declaring the model used  
-filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/dolo/examples/models/rbc_iid.yaml"
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo/examples/models/rbc_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
 
