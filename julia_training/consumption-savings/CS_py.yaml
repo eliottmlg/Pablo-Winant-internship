@@ -42,12 +42,25 @@ calibration:
 domain:
     w: [0.01, 4.0]
 
-exogenous: y: !AR1 #
-    rho: 0.9
-    sigma: σ^2
+#exogenous: y: !AR1 #
+#    rho: 0.9
+#    sigma: σ^2
 
+
+#options:
+#    grid: !Cartesian
+#        orders: [50]
+
+
+
+exogenous:
+    y: !UNormal
+        sigma: σ
 
 
 options:
-    grid: !Cartesian
-        orders: [50]
+    discretization:
+        endo:
+            n: [100]
+        exo:
+            n: 7
