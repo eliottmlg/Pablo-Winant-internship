@@ -47,6 +47,7 @@ exogenous: !AR1
     sigma: σ^2
 
 
+
 options:
     grid: !Cartesian
         orders: [50]
