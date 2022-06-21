@@ -524,7 +524,7 @@ Dolo.inode(dp,1,1) # which states j in particular, given i
 
 
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumption-savings/CS_py.yaml"
-filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
+#filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
 funs = Dolo.direct_response_egm(model, 1, 1, 1, 1)
