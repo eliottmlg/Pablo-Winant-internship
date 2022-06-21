@@ -2,6 +2,7 @@ symbols:
     exogenous: [y]
     states: [w]
     controls: [c]
+    poststates: [a]
     parameters: [β, γ, σ, ρ, r, cbar]
 
 
