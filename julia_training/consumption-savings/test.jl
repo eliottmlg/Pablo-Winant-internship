@@ -529,5 +529,7 @@ gt = funs["half_transition"]
 aτ = funs["reverse_state"]
 
 Dolo.get_equation_block(model, "half_transition")
-model.data["equations"]["half_transition"]
+model.data["equations"][half_transition]
+
 model.data["equations"]
+Dolo.get_variables(model)
