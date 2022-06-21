@@ -523,7 +523,7 @@ Dolo.inode(dp,1,1) # which states j in particular, given i
 
 
 
-filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumption-savings/consumption_savings_iid.yaml"
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/dolo/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
 funs = Dolo.direct_response_egm(model, 1, 1, 1, 1)
