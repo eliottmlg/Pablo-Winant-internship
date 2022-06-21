@@ -487,3 +487,47 @@ interp_linear(3.1) # approximately log(3.1)
 interp_linear(0.9) # outside grid: error
 interp_linear_extrap = LinearInterpolation(xs, A,extrapolation_bc=Line()) 
 interp_linear_extrap(0.9) # outside grid: linear extrapolation
+
+
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/dolo/examples/models/consumption_savings_iid.yaml"
+readlines(filename)
+model = yaml_import(filename)
+model.symbols[:expectation]
+Dolo.arbitrage(model)
+
+dp = Dolo.discretize(model.exogenous)
+dp.grid
+dp.integration_nodes
+dp.integration_weights
+Dolo.iweight(dp,1,1) # transition probabilities
+Dolo.n_inodes(dp,1) # nb of possible future states given current state i
+Dolo.n_nodes(dp) # size of matrix states
+Dolo.inode(dp,1,1)
+
+
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumption-savings/consumption_savings_iid.yaml"
+readlines(filename)
+model = yaml_import(filename)
+model.symbols[:states]
+dp = Dolo.discretize(model.exogenous)
+dp.grid
+dp
+dp.transitions
+dp.values
+Dolo.get_integration_nodes(dp,1)
+
+Dolo.iweight(dp,1,2) # transition probabilities
+Dolo.n_inodes(dp,1) # nb of possible future states given current state i
+Dolo.n_nodes(dp) # size of matrix states
+Dolo.inode(dp,1,1) # which states j in particular, given i
+
+
+funs = Dolo.direct_response_egm(model, 1, 1, 1, 1)
+h = funs["expectation"]
+gt = funs["half_transition"]
+τ = funs["direct_response_egm"]
+aτ = funs["reverse_state"]
+
+Dolo.get_equation_block(model, "half_transition")
+model.data["equations"]["half_transition"]
+model.data["equations"]
