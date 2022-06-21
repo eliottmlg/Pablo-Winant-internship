@@ -40,6 +40,7 @@ calibration:
     c: 0.9*w
     y: 0.0
     mr: 0.0
+    a: w
 
 domain:
     w: [0.01, 4.0]
