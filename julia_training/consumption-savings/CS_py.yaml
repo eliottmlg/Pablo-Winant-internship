@@ -39,6 +39,7 @@ calibration:
     ξ: 0.0
     c: 0.9*w
     y: 0.0
+    mr: 0.0
 
 domain:
     w: [0.01, 4.0]
