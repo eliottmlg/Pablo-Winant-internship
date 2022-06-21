@@ -522,6 +522,8 @@ Dolo.n_nodes(dp) # size of matrix states
 Dolo.inode(dp,1,1) # which states j in particular, given i
 
 
+
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumption-savings/consumption_savings_iid.yaml"
 funs = Dolo.direct_response_egm(model, 1, 1, 1, 1)
 h = funs["expectation"]
 gt = funs["half_transition"]
@@ -530,6 +532,7 @@ aτ = funs["reverse_state"]
 
 Dolo.get_equation_block(model, "half_transition")
 model.data["equations"][half_transition]
-
+model.symbols
+model.symbols[:poststates]
 model.data["equations"]
 Dolo.get_variables(model)
