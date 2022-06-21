@@ -9,10 +9,10 @@ symbols:
 
 equations:
 
-    transition:
+    transition: |
         - w[t] = exp(y[t]) + (w[t-1]-c[t-1])*r
 
-    arbitrage:
+    arbitrage: |
         - β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0.0<=c[t]<=w[t]
 
     half_transition: |
