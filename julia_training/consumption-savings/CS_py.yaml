@@ -39,7 +39,7 @@ calibration:
     ξ: 0.0
     c: 0.9*w
     y: 0.0
-    mr: 0.0
+    mr: c
     a: w
 
 domain:
@@ -53,8 +53,6 @@ domain:
 #options:
 #    grid: !Cartesian
 #        orders: [50]
-
-
 
 exogenous:
     y: !UNormal
