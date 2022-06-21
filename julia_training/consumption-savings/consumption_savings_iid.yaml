@@ -13,8 +13,8 @@ equations:
     arbitrage: |
         β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0<=c[t]<=w[t]
 
-    # half_transition: |
-    #     w[t] = exp(y[t]) + a[t-1]*r
+     half_transition: |
+         w[t] = exp(y[t]) + a[t-1]*r
 
     # reverse_state: |
     #     w[t] = a[t] + c[t]

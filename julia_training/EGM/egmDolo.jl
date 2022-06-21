@@ -1,107 +1,163 @@
+## Implementing EGM generalised to all types of shocks + finding why decision rules are flat
 
-struct Iterationlog
-    header::Array{String, 1}
-    keywords::Array{Symbol, 1}
-    types::Vector
-    entries::Array{Any, 1}
-    fmt::String
+using Pkg
+using Interpolations
+using Plots
+using Dolo
+using StaticArrays
+using QuantEcon
+using LinearAlgebra
+
+# We define the model here
+m = let
+    # parameter calibration
+
+    γ = 4.0   
+    σ_y = 0.1
+    β = 0.96
+    r = 1.02
+    rho = 0.9
+    N_mc = 3
+    cbar = 0.9
+    sigma = Array{Float64}(undef, 1, 1)
+    sigma[1,1] = σ_y^2
+    p = (;β, γ, r, σ_y, rho, N_mc, cbar, sigma)
+
+    # Markov process
+    ar1 = Dolo.VAR1(ρ = rho, Σ = sigma)
+    mc = Dolo.discretize(ar1; n=N_mc)
+    states = mc.values
+    transitions = mc.transitions
+    size_states = Dolo.n_nodes(mc)
+    #j_after_i = Dolo.i_n_inodes(mc,i)
+
+    # Initial decision rule (consumption as a function of available wealth)
+    φ0 = Vector{Any}(undef, N_mc)
+    for i in 1:size_states
+    φ0[i] = w -> min(w, 1.0 + 0.01*(w-1.0))
+    end
+    φ0  # vector of length nb_of_markov_states of anonymous functions
+
+    # This is the discretization of...
+    N = 50
+    w_grid = range(0.01, 4; length=N) # the state-space
+    a_grid = range(0.01, 4; length=N) # the post-states
+    
+    (;p, φ=φ0, a_grid, w_grid, N, markovprocess=(states, transitions, size_states))
+
 end
 
-# function Iterationlog()
-#     header = [ "It", "ϵₙ", "ηₙ=|xₙ-xₙ₋₁|", "λₙ=ηₙ/ηₙ₋₁", "Time", "Newton steps"]
-#     keywords = [:it, :err, :gain, :time, :nit]
-#     Iterationlog(header, keywords, [])
-# end
 
-function Iterationlog(;kw...)
-    keywords = Symbol[]
-    header = String[]
-    elts = []
-    types= []
-    for (k,(v,t)) in kw
-        push!(types, t)
-        push!(keywords, k)
-        push!(header, v)
-        if t<:Int
-            push!(elts, "{:>8}")
-        elseif t<:Real
-            push!(elts, "{:>12.4e}")
-        else
-            error("Don't know how to format type $t")
+
+
+
+function consumption_a(model; 
+    dr0=Dolo.ConstantDecisionRule(model),
+    φ1)
+    """Computes consumption at each point of the post-state grid given:
+    - φ1: decision rule for consumption tomorrow
+    - m:  model
+    """
+
+    (states, transitions) = m.markovprocess
+    c_a = Matrix{Float64}(undef, length(m.a_grid), size_states)
+
+    for i in 1:size_states  # βREyu'(c'(M'))
+
+        for (n,a) in enumerate(m.a_grid)
+
+            rhs = zeros(size_states)
+            Φ = zeros(size_states)
+
+            for j in 1:size_states
+
+                inc = states[j,1]
+                prob = transitions[i,j]
+                W = exp(inc) + a*m.p.r # M' = AR + y
+                C = φ1[j](W) # c'(M') using c_(i-1)(.)  
+                Φ[j] = m.p.β * prob * (C/m.p.cbar)^(-m.p.γ) * (m.p.r) 
+
+            end
+
+            rhs = LinearAlgebra.dot(Φ, transitions[i,:])
+            c_a[n, i] = m.p.cbar * (rhs)^(-1.0/m.p.γ)
+        end 
+    end
+    return c_a # matrix length(a_grid) x length(states) containing updated consumption levels (Float64)
+end
+
+
+function egm(m; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
+    """Computes the time iteration solution given:
+    - φ: initial decision rule for consumption
+    - m: model
+    """
+
+    size_states = m.markovprocess[3]
+    logs = [] # to keep all successive decision rules
+
+    local w_grid, c_a, φ0
+
+    a_grid = m.a_grid
+     φ0 = φ
+    
+    for t in 1:T
+        
+        trace ? push!(logs, deepcopy(φ0)) : nothing
+        c_a = consumption_a(φ0, m) # c_new = (u')^(-1)(A)
+        
+        for i in 1:size_states 
+            w_grid = a_grid + c_a[:,i] # M_new = A + c_new
+            c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
+            φ0[i] = LinearInterpolation(w_grid, c_a[:,i]; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
         end
     end
-    fmt = join(elts, " | ")
-    Iterationlog(header, keywords, types, [], fmt)
-end
 
-function append!(log::Iterationlog; verbose=true, entry...)
-    d = Dict(entry)
-    push!(log.entries, d)
-    verbose && show_entry(log, d)
-end
-
-function initialize(log::Iterationlog; verbose=true, message=nothing)
-    verbose && show_start(log; message=message)
-end
-
-function finalize(log::Iterationlog; verbose=true)
-    verbose && show_end(log)
-end
-
-function show(log::Iterationlog)
-    show_start(log)
-    for entry in log.entries
-        show_entry(log,entry)
-    end
-    show_end(log)
-end
-
-function show_start(log::Iterationlog; message=nothing)
-    # println(repeat("-", 66))
-    # @printf "%-6s%-16s%-16s%-16s%-16s%-5s\n" "It" "ϵₙ" "ηₙ=|xₙ-xₙ₋₁|" "λₙ=ηₙ/ηₙ₋₁" "Time" "Newton steps"
-    # println(repeat("-", 66))
-
-    l = []
-    for t in log.types
-        if t<:Int
-            push!(l, "{:>8}")
-        elseif t<:Real
-            push!(l, "{:>12}")
+    if resample
+        for i in 1:size_states
+            # we resample the solution so that it interpolates exactly
+            # on the grid specified in m.w_grid (not the endogenous one.)
+            nx = φ0[i](m.w_grid)
+            φ0[i] = LinearInterpolation(m.w_grid, nx; extrapolation_bc=Line())
         end
     end
 
-    a = join(l, " | ")
-    s = format(a, log.header...)
-
-    if message !== nothing
-        println(repeat("-", length(s)))
-        println(message)
+    if trace
+        return φ0, logs, w_grid, c_a
+    else
+        return φ0 # 3-element vector, each element is an object of linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
     end
-    println(repeat("-", length(s)))
-
-    println(s)
-    println(repeat("-", length(s)))
-end
-
-
-function show_entry(log::Iterationlog, entry)
-
-    vals = [entry[k] for k in log.keywords]
-    printfmt(log.fmt, vals...)
-    print("\n")
 
 end
 
-function show_end(log::Iterationlog)
-    println(repeat("-", 66))
+#Results along markov states NOT GOOD
+@time φs = egm(m; resample=true)
+function result(φs)
+    xvec = range(0,m.w_grid[m.N];length=50)
+    x = φs[1].itp.ranges[1] # grid for resample (same along markov states), for not resample φs[i].itp.knots[1]
+    plt = plot(xvec, xvec; xlims=(0,4), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
+    for i in 1:length(m.markovprocess[1])
+        plt = plot!(x, min.(x,φs[i](x)); marker= "o")
+        plt = plot!(x, φs[i]; marker= "o")
+    end
+    plt
+end 
+result(φs)
+
+# iterations for fixed markov state NOT GOOD
+@time soltrace = egm(m; resample=true, trace = true) 
+xvec = range(0,4;length=100)
+function convergenceEGM(soltrace)
+        soltrace = soltrace
+        log = soltrace[2]
+        x = soltrace[1][1].itp.ranges[1]
+        plt = plot()
+        plot!(plt, xvec, xvec; label="w", ylims=(0,4))
+    for i=1:20:length(log)
+        plot!(plt, x, min.(x,log[i][2]); marker= "o")
+        plot!(plt, x, min.(x, log[i][2](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
+    end
+    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
+    plot!(plt, legend = true)
 end
-
-###
-
-mutable struct IterationTrace
-    trace::Array{Any,1}
-end
-
-
-####################### Same beginning as Time iteration ##############################
-
+convergenceEGM(soltrace)
