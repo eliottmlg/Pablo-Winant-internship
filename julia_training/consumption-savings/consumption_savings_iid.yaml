@@ -15,16 +15,16 @@ equations:
     arbitrage: |
         β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0<=c[t]<=w[t]
 
-     half_transition: |
+    half_transition: |
          w[t] = exp(y[t]) + a[t-1]*r
 
-     reverse_state: |
+    reverse_state: |
          w[t] = a[t] + c[t]
 
-     expectation: |
+    expectation: |
          mr[t] = β*( c[t+1]/cbar )^(-γ)*r
 
-     direct_response_egm: |
+    direct_response_egm: |
          c[t] = cbar*(mr[t])^(-1/γ)
 
 calibration:
