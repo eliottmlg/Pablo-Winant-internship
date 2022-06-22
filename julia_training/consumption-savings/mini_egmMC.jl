@@ -6,7 +6,6 @@ using Dolo
 using StaticArrays
 using QuantEcon
 using LinearAlgebra
-Pkg.add("StaticArrays")
 
 ## constructing markov chain from AR1
 
@@ -64,8 +63,8 @@ m = let
 
     # This is the discretization of...
     N = 100
-    w_grid = range(0.8, 20; length=N) # the state-space
-    a_grid = range(0.0, 20; length=N) # the post-states
+    w_grid = range(0.8, 10; length=N) # the state-space
+    a_grid = range(0.0, 10; length=N) # the post-states
     
     (;p, φ=φ0, a_grid, w_grid, N, markovprocess=(states, transitions))
 
@@ -171,76 +170,38 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
 
 end
 
-# results GOOD
+
+## Plots
+# results for all markov states, constraints VS No constraints: GOOD
 @time φs = egm(m; resample=true)
 function result(φs)
-    xvec = range(0,10;length=10)
-    plt = plot(xvec, xvec; xlims=(0,10))
-    for i in 1:length(m.markovprocess[1])
-        x = φs[i].itp.ranges[1]
-        plt = plot!(φs[i].itp.ranges[1], min.(x,φs[i](x)); marker= "o", xlabel="State w", ylabel="Control c(w)")
-    end
-    plt
-end 
-result(φs)
-
-# Results comparing interpolation argument, GOOD but flat
-function result(φs)
-    xvec = range(0,m.w_grid[m.N];length=50)
+    xvec = range(0,m.w_grid[m.N];length=100)
     plt = plot(xvec, xvec; xlims=(0,10), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
     for i in 1:length(m.markovprocess[1])
         x = φs[i].itp.ranges[1]
-        #plt = plot!(φs[i].itp.ranges[1], φs[i](x); marker= "o")
-        plt = plot!(x, min.(x,φs[i](x)); markershape=:star5)
-        plt = plot!(x, min.(x,φs[i]); marker= "o")
+        plt = plot!(x, φs[i](x))
+        plt = plot!(x, min.(x,φs[i](x)); marker="o")
     end
     plt
 end 
 result(φs) 
 
-## Plots
-# fixed vs endogeneous
-φ = egm(m; resample=false)
-φs = egm(m; resample=true)
-plot(xvec, xvec; label="w")
-plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
-plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
-
-# iterations GOOD
+# iterations NOT GOOD, the policy function seems to converge at the 2nd iteration only
 @time soltrace = egm(m; resample=true, trace = true) 
-@time soltrace = egm(m; resample=false, trace = true) 
 function convergenceEGM(soltrace)
         soltrace = soltrace
-        log = soltrace[2]
-        xvec = range(0,20;length=100)
-        x = soltrace[1][4].itp.ranges[1] # true, chosen the 4th markov states
-        #x = soltrace[1][i].itp.knots[1] # false
-        plt = plot()
-        plot!(plt, xvec, xvec; label="w", ylims=(0,20))
-    for i=1:20:length(log)
-        # plot!(plt, x, min.(x,log[i][4]); marker= "o") # 4th markov state
-        plot!(plt, x, min.(x, log[i][4](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
-    end
-    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
-    plot!(plt, legend = true)
+        logs = soltrace[2]
+        xvec = range(0,10;length=100)
+        x = soltrace[1][4].itp.ranges[1] # chosen the 4th markov state
+        plt = plot(xvec, xvec; xlims=(0,10), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
+        plt = plot!(xlabel = "Wealth", ylabel = "Consumption")
+        plt = plot!(legend = false)
+        for i in 1:length(logs)
+            plt = plot!(x, min.(x, logs[i][4](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
+        end
+        plt
 end
 convergenceEGM(soltrace)
-
-soltrace[1][1].itp.ranges[1]
-soltrace[2][4][1](soltrace[1][1].itp.ranges[1])
-soltrace[1][3].itp.knots[1]
-soltrace[2][500][5]
-soltrace[1][9].itp.knots[1]
-soltrace[5][500]
-
-soltrace[2][500][4]-soltrace[1][4] # almost zero
-soltrace[2][2][4]-soltrace[2][500][4] # almost zero
-# it seems the decision rule converges extremely fast
-# OR the logs captures the same values for the 
-# 2nd iteration throughout the 500th 
-
-soltrace[2][500][9](soltrace[5][500])
-soltrace[2][500][9]
-soltrace[1][1]
-# replace iid shock with markov chain
-
+# for instance 
+logs = soltrace[2]
+logs[2][4]-logs[500][4] # comparing the 2nd and the 500th iterations for markov state 4, returns zeros 

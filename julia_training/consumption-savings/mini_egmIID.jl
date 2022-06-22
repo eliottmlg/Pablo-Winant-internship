@@ -98,18 +98,19 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false,
 end
 
 ## Plots
-xvec = range(0,10;length=100)
-plt = plot(xvec, xvec; xlims=(0,6))
-plot!(plt, xvec, min.(xvec,φ.(xvec)))
-plt
 
-# fixed vs endogeneous
-xvec = range(0,10;length=10)
+# fixed vs endogeneous GOOD
+xvec = range(0,10;length=100)
 φ = egm(m; resample=false)
 φs = egm(m; resample=true)
 plot(xvec, xvec; label="w")
-plot!(φ.itp.knots[1], φ.itp.coefs; marker= "o", label="c(W) endogenous")
-plot!(φs.itp.ranges[1], φs.itp.itp.coefs; marker= "o", label="c(A) fixed", xlabel="State w", ylabel="Control c(w)")
+plot!(φ.itp.knots[1], φ.itp.coefs; label="c(W) endogenous")
+plot!(φs.itp.ranges[1], φs.itp.itp.coefs; label="c(w) on the initial W-grid", xlabel="State w", ylabel="Control c(w)")
+# above similar to plot!(w, min.(w,trace[500](w))) but need:
+#trace = soltrace[2]
+#w = soltrace[1].itp.ranges[1]
+
+
 
 # iterations GOOD
 @time soltrace = egm(m; resample=true, trace = true) 
@@ -122,7 +123,7 @@ function convergenceEGM(soltrace)
         plt = plot()
         plot!(plt, xvec, xvec; label="w", ylims=(0,10))
     for i=1:length(trace)
-        plot!(plt, w, min.(w,trace[i](w)); marker= "o")
+        plot!(plt, w, min.(w,trace[i](w)))
     end
     plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
     plot!(plt, legend = false)
