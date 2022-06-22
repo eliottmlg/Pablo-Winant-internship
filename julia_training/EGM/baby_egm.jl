@@ -123,34 +123,40 @@ function egm(m; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
 
 end
 
-#Results along markov states NOT GOOD
+
+
+## Plots
+# results for all markov states, constraints VS No constraints: GOOD
 @time φs = egm(m; resample=true)
 function result(φs)
-    xvec = range(0,m.w_grid[m.N];length=50)
-    x = φs[1].itp.ranges[1] # grid for resample (same along markov states), for not resample φs[i].itp.knots[1]
-    plt = plot(xvec, xvec; xlims=(0,4), ylims=(0,10), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
+    xvec = range(0,m.w_grid[m.N];length=100)
+    plt = plot(xvec, xvec; xlims=(0,5), ylims=(0,6), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
     for i in 1:length(m.markovprocess[1])
-        plt = plot!(x, min.(x,φs[i](x)); marker= "o")
-        plt = plot!(x, φs[i]; marker= "o")
+        x = φs[i].itp.ranges[1]
+        plt = plot!(x, φs[i](x))
+        plt = plot!(x, min.(x,φs[i](x)); marker="o")
     end
     plt
 end 
-result(φs)
+result(φs) 
 
-# iterations for fixed markov state NOT GOOD
+
+# iterations NOT GOOD, the policy function seems to converge at the 2nd iteration only
 @time soltrace = egm(m; resample=true, trace = true) 
-xvec = range(0,4;length=100)
 function convergenceEGM(soltrace)
         soltrace = soltrace
-        log = soltrace[2]
-        x = soltrace[1][1].itp.ranges[1]
-        plt = plot()
-        plot!(plt, xvec, xvec; label="w", ylims=(0,4))
-    for i=1:20:length(log)
-        plot!(plt, x, min.(x,log[i][2]); marker= "o")
-        plot!(plt, x, min.(x, log[i][2](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
-    end
-    plot!(plt, xlabel = "Wealth", ylabel = "Consumption")
-    plot!(plt, legend = true)
+        logs = soltrace[2]
+        xvec = range(0,10;length=100)
+        x = soltrace[1][2].itp.ranges[1] # chosen the 4th markov state
+        plt = plot(xvec, xvec; xlims=(0,5), ylims=(0,6), xlabel="State w", ylabel="Control c(w)", legend = :bottomright)
+        plt = plot!(xlabel = "Wealth", ylabel = "Consumption")
+        plt = plot!(legend = false)
+        for i in 1:length(logs)
+            plt = plot!(x, min.(x, logs[i][2](x))) # soltrace[log][ith iteration][markov state][value of consumption on the nth point of the w-grid]
+        end
+        plt
 end
 convergenceEGM(soltrace)
+# for instance 
+logs = soltrace[2]
+logs[2][2]-logs[500][2] # comparing the 2nd and the 500th iterations for markov state 2, returns zeros 
