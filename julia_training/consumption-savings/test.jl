@@ -527,11 +527,15 @@ filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumpt
 #filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
+
+
+#=
 funs = Dolo.direct_response_egm(model, 1, 1, 1, 1)
 h = funs["expectation"]
 gt = funs["half_transition"]
 τ = funs["direct_response_egm"]
 aτ = funs["reverse_state"]
+=#
 
 Dolo.get_equation_block(model, "half_transition")
 model.data["equations"][half_transition]
@@ -539,3 +543,7 @@ model.symbols
 model.symbols[:poststates]
 model.data["equations"]
 Dolo.get_variables(model)
+Dolo.expectation()
+
+# liste
+# SVector vector static, dont on connait la dimension

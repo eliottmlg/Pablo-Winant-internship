@@ -60,7 +60,7 @@ Here is an outline of the algorithm:
 
 1. Set a fixed grid over the continuous post-state variable $a_t$, say $A$
 2. Set with an initial guess of the policy function $\phi^0$, a mapping from the grid of the state to the set of decision variable values 
-3. Compute at the current guess $\phi^n$, for each point on the fixed grid $A$, the RHS of the Euler equation, $z_t = E_t[h(m_{t+1},s_{t+1},x_{t+1})]$ 
+3. Compute at the current guess $\phi^n$, for each point on the fixed grid $A$, the RHS of the Euler equation, $z(m_t,a_t) =  E_t[h(m_{t+1},s_{t+1},x_{t+1})]$ 
 4. Compute the updated decision at each gridpoint of $A$ using the direct-response equation
 5. Construct the new grid of the state $s_t$ using the reverse-state equation
 6. Match each endogenous grid points of $s_t$ to decision values $x_t$ and interpolate the policy function $x_n(s_t)$
