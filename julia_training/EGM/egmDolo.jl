@@ -161,3 +161,4 @@ function convergenceEGM(soltrace)
     plot!(plt, legend = true)
 end
 convergenceEGM(soltrace)
+

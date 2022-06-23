@@ -10,7 +10,7 @@ symbols:
 equations:
 
     transition: |
-        - w[t] = exp(y[t]) + (w[t-1]-c[t-1])*r
+        w[t] = exp(y[t]) + (w[t-1]-c[t-1])*r
 
     arbitrage: |
         - β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0.0<=c[t]<=w[t]

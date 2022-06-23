@@ -2,6 +2,7 @@
 AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Dolang = "e5c7262c-e9d2-5620-ad8e-1af14eb8a8e3"
 Dolo = "9d24351c-2990-5e1b-a277-04c4b809c898"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
