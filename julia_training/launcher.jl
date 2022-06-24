@@ -2,6 +2,8 @@
 # Setup
 using Pkg
 using Dolo 
+Pkg.instantiate()
+
 
 # Consumption savings Dolo
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/consumption-savings/consumption_savings.yaml"
