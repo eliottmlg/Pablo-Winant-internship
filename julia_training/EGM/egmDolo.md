@@ -57,7 +57,7 @@ where $\mathbf{m_t}$ is a vector of length $K$ of exogenous shocks, $\mathbf{x_t
 
 The EGM consists in approximating the policy function as a function of shocks and the state, $\phi(\mathbf{m_t},\mathbf{s_t})$, alike the Time iteration algorithm. The difference lies in the fact that optimal decisions are computed only at gridpoints that satisfy the Euler equation and these computations do not involve any root-finding problem. Decisions can be written in two equivalent ways, in terms of the state or the post-state $x_t^{i,j}=\phi(m_{t}^j,s_t^i) = \psi(m_{t}^j,a_t^i)$ where $j=1,2,...,J$ indexes the current state of the shock and $i=1,2,...,I$ indexes the point on the fixed grid $A$. At step $n$, the current guess for the control, $\phi_n(m_{t}^j,s_t^i)$, serves as the control being used in the next period.
 
-$x_{t,n}^{i,j} = x_{t,n}(m_{t}^j, a^i_t)$ is the value of the control at $t$, given we are in point $i$ of the fixed grid $A$ and the current state of the shock is $j$, at the iteration $n$. $\mathbf{x_{t,n}} = \mathbf{x_{t,n}(\mathbf{m_t},\mathbf{s_t})}$ is the vector of decisions at $t$ in iteration $n$. Finally,
+$x_{t,n}^{i,j} = x_{t,n}(m_{t}^j, a^i_t)$ is the value of the control at $t$, given we are in point $i$ of the fixed grid $A$ and the current state of the shock is $j$, at the iteration $n$. $\mathbf{x_{t,n}} = \mathbf{x_{t,n}(\mathbf{m_t},\mathbf{a_t})}$ is the vector of decisions at $t$ in iteration $n$. Finally,
  $\phi_n(\mathbf{m_t},\mathbf{s_t})$ is the policy function (obtained after interpolating $\mathbf{x_{t,n}}$ on $\mathbf{s_{t,n}}$) at iteration $n$.
 
 Here is an outline of the algorithm:
