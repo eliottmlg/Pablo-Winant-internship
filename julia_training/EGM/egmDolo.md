@@ -63,8 +63,8 @@ $x_{t,n}^{i,j} = x_{t,n}(m_{t}^j, a^i_t)$ is the value of the control at $t$, gi
 Here is an outline of the algorithm:
 
 1. Discretize the continuous post-state variable $a$ on a fixed grid $A$, the continuous state $s$ on an endogenous grid $\mathbf{s_0}$, and the continuous shock $m$ on an exogenous grid $M$.
-2. Start with an initial guess of the policy function $\phi^0(\mathbf{m_t},\mathbf{s_t}) = \mathbf{m_t}$, a mapping from the state-grid and the exogenous-grid to the set of decisions $x_t$.
-3. At the current guess $\phi_n(m_t,s_t)$, execute the following for $j=1$ through $j=J$: $\forall a_t^i \in A$, compute $z(m_{t}^j,a_t^i) = E_t[h(m_{t+1},s_{t+1},x_{t+1})] = E_{m_{t+1}^k|m_{t}^j}[h(m_{t+1}^k,g(m_{t}^j,a^i_t,m_{t+1}^k),\phi^{n}(m_{t+1}^k,g(m_{t}^j,a_t^i,m_{t+1}^k)))]$ for $k=1,...,K$ the index for the state of the shock in the next period. This corresponds to the RHS of the Euler equation.
+2. Start with an initial guess of the policy function $\phi_0(\mathbf{m_t},\mathbf{s_t}) = \mathbf{m_t}$, a mapping from the state-grid and the exogenous-grid to the set of decisions $x_t$.
+3. At the current guess $\phi_n(\mathbf{m_t},\mathbf{s_t})$, execute the following for $j=1$ through $j=J$: $\forall a_t^i \in A$, compute $z(m_{t}^j,a_t^i) = E_t[h(m_{t+1},s_{t+1},x_{t+1})] = E_{m_{t+1}^k|m_{t}^j}[h(m_{t+1}^k,g(m_{t}^j,a^i_t,m_{t+1}^k),\phi^{n}(m_{t+1}^k,g(m_{t}^j,a_t^i,m_{t+1}^k)))]$ for $k=1,...,K$ the index for the state of the shock in the next period. This corresponds to the RHS of the Euler equation.
 4. Compute for all pairs $(a_t^i, m_{t}^j)$ the updated decisions $\mathbf{x_{t,n+1}}$ using the direct-response equation: $x_{t,n+1}^{i,j}(m_{t}^j, a^i_t) = \tau(m_{t}^j,a^i_t,z(m_{t}^j,a^i_t))$
 5. Construct the new endogenous grid $\mathbf{s_{t,n+1}}$ by computing for all pairs $(m_{t}^j,a^i_t)$ the state $\mathbf{s_{t,n+1}}$ using the reverse-state equation: $s_{t,n+1}^i = a\tau(m_{t}^j,a^i_t,x_{t,n+1}^{i,j})$
 6. Interpolate each element of $\mathbf{x_{t,n+1}}$ on endogenous gridpoints of $\mathbf{s_{t,n+1}}$ to get the policy function $\phi_{n+1}(\mathbf{m_{t}},\mathbf{s_t})$. 
