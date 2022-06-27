@@ -240,8 +240,8 @@ uuid = "e5c7262c-e9d2-5620-ad8e-1af14eb8a8e3"
 version = "3.3.0"
 
 [[deps.Dolo]]
-deps = ["AxisArrays", "BasisMatrices", "BenchmarkTools", "Compat", "DataStructures", "Distributions", "Dolang", "FiniteDiff", "Formatting", "ForwardDiff", "HTTP", "IterTools", "IterativeSolvers", "Lerche", "LinearAlgebra", "LinearMaps", "MacroTools", "NLsolve", "Optim", "Plots", "Printf", "QuantEcon", "SimplePlots", "StaticArrays", "StringDistances", "Test", "YAML"]
-path = "Dolo"
+deps = ["AxisArrays", "BasisMatrices", "Compat", "DataStructures", "Distributions", "Dolang", "Formatting", "HTTP", "IterTools", "IterativeSolvers", "Lerche", "LinearAlgebra", "MacroTools", "NLsolve", "Optim", "Printf", "QuantEcon", "StaticArrays", "StringDistances", "Test", "YAML"]
+git-tree-sha1 = "7433c237ca28dfd60705b1461969188daab2f9ba"
 uuid = "9d24351c-2990-5e1b-a277-04c4b809c898"
 version = "0.4.4"
 
@@ -623,12 +623,6 @@ version = "7.1.1"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-
-[[deps.LinearMaps]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-git-tree-sha1 = "1693d6d0dfefd24ee97ffc5ea91f1cd2cf77ef6e"
-uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
-version = "3.6.1"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]

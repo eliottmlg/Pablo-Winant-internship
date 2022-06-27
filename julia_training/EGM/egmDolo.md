@@ -52,9 +52,9 @@ $x_t = \tau(m_t,a_t,z_t)$, the direct-response equation
 
 $s_t = a\tau(m_t,a_t,x_t)$, the reverse-state equation
 
-where $m_t$ is a vector of length $K$ of exogenous shocks at t, $x_t$ is the control at t, $s_t$ is the state at t, $a$ is the continuous post-state.
+where $m_t$ is a vector of length $K$ of exogenous shocks at t, $x_t$ is the control at t, $s_t$ is the state at t, $a_t$ is the continuous post-state at t.
 
-The EGM consists in approximating the policy function as a function of shocks and the state, $\phi(m_t,s_t)$, alike the Time iteration algorithm. The difference lies in the fact that optimal decisions are computed only at gridpoints that satisfy the Euler equation and these computations do not involve any root-finding problem. Decisions can be written in two equivalent ways, in terms of the state or the post-state $x^{i,j}=\phi^n(m_j,s^i) = \psi^n(m_j,a^i)$. Here, $j=1,2,...,J$ indicates the current state of the shock, $k=1,2,...,K$ indicates next period's state of the shock, and $i=1,2,...,I$ indicates the point on the fixed grid $A$. At step $n$, the current guess for the control, $\phi_n(m^j,s^i)$, serves as the control being used in the next period.
+The EGM consists in approximating the policy function as a function of shocks and the state, $\phi(m_t,s_t)$, alike the Time iteration algorithm. The difference lies in the fact that optimal decisions are computed only at gridpoints that satisfy the Euler equation and these computations do not involve any root-finding problem. Decisions can be written in two equivalent ways, in terms of the state or the post-state $x_t^{i,j}=\phi^n(m_{t,j},s^i) = \psi^n(m_j,a^i)$. Here, $j=1,2,...,J$ indicates the current state of the shock, $k=1,2,...,K$ indicates next period's state of the shock, and $i=1,2,...,I$ indicates the point on the fixed grid $A$. At step $n$, the current guess for the control, $\phi_n(m^j,s^i)$, serves as the control being used in the next period.
 Here is an outline of the algorithm:
 
 1. Discretize the post-state variable $a$ on a fixed grid $A$, the state $s_t^0$ on an endogenous grid $S^0$, and the shocks $m$ on exogenous grid $M$
