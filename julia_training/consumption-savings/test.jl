@@ -537,9 +537,7 @@ gt = funs["half_transition"]
 aτ = funs["reverse_state"]
 =#
 
-Dolo.get_equation_block(model, "half_transition")
-
-
+Dolo.get_equation_block(model, "arbitrage")
 eqs = Dolo.get_assignment_block(model, "half_transition")
 eqs
 
@@ -552,24 +550,44 @@ Dolo.expectation()
 # liste
 # SVector vector static, dont on connait la dimension
 import Dolang
-
 f = Dolo.get_factory(model, "transition")
 code = Dolang.gen_generated_gufun(f)
-
-
-
 transition = eval(code)
-
 using StaticArrays
-
-transition(m,s,x,m,p)
-
 m_, s_, x_, p_ = model.calibration[:exogenous, :states, :controls, :parameters]
 m,s,x,p = [SVector(e...) for e in model.calibration[:exogenous, :states, :controls, :parameters]]
+mvec = [SVector(m...)  for i = 1:10]
+mvec = cat([m' for i=1:100]...; dims=1)
+transition(m,s,x,m,p)
+
+
+for i in 1:length(vector_F)
+    code = Dolang.gen_generated_gufun(vector_F[i])
+    push!(F, eval(code))
+end
+
+for i in 1:length(vector_F)
+    print(i)
+end
+
+
+
+Dolo.get_calibration(model)
+Dolo.get_defined_variables(model)
+Dolo.get_variables(model)
+model.symbols
+
+model.symbols[:poststates]
+model.data["equations"]
+Dolo.get_variables(model)
+
+model.symbols
+model.symbols[:poststates]
+model.data["equations"]
+Dolo.get_variables(model)
+
 
 
 mvec = [SVector(m...)  for i = 1:10]
-mvec = cat([m' for i=1:100]...; dims=1)
-
+mvec = cat([m' for i=1:10]...; dims=1)
 transition(m,s,x,m,p)
-
