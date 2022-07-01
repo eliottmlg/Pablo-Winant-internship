@@ -4,6 +4,7 @@ using Pkg
 using Interpolations
 using Plots
 using Dolo
+using Dolo: UNormal, discretize 
 using StaticArrays
 using QuantEcon
 using LinearAlgebra
@@ -47,6 +48,12 @@ h = eval(code)
 # exogenous shock
 shock = Dolo.get_exogenous(model)
 dp = Dolo.discretize(shock, n = grid[:exo][:n])
+N_m = max(Dolo.n_nodes(grid_exo),1)
+φ0 = Vector{Any}(undef, N_m)
+
+
+
+typeof(dp)
 dp.grid
 dp.integration_nodes
 dp.integration_weights
@@ -59,7 +66,14 @@ size_states = Dolo.n_nodes(dp) # size of matrix states
 m_, s_, mr_, a_, x_, p_ = model.calibration[:exogenous, :states, :expectations, :poststates, :controls, :parameters]
 m,s,mr,a,x,p = [SVector(e...) for e in model.calibration[:exogenous, :states, :expectations, :poststates, :controls, :parameters]]
 
-# grid 
+# grids
+grid, dprocess = Dolo.discretize(model)
+grid_endo = grid.endo
+grid_exo = grid.exo
+grid_fixed = grid_endo
+s0 = Dolo.nodes(grid_endo)
+a0 = Dolo.nodes(grid_fixed)
+
 model.domain
 Dolo.get_domain(grid)
 domain = Dolo.get_domain(model)
@@ -70,19 +84,58 @@ grid = Dolo.get_discretization_options(model)
 grid[:exo][:n]
 grid[:endo][:n]
 
-discretized = Dolo.discretize(model)
+grid, dproces = Dolo.discretize(model)
+grid_endo = grid.endo
+grid_exo = grid.exo
 
-exogrid = discretize[1].exo
-exogrid.n
 
-endogrid = discretize[1].endo
-endogrid.n
 
 function consumption_a(model;
     dr0=Dolo.ConstantDecisionRule(model),
     φ1)
-    if 
-    for i in 1:
+
+    #nodes = Dolo.inode(dprocess,1)
+
+    if typeof(dp) != Dolo.DiscretizedIIDProcess
+        size_states = Dolo.n_nodes(dp)
+    else 
+        size_states = size(dp.integration_nodes,1)
+    end
+    c_a = Matrix{Float64}(undef, length(a_grid), size_states)
+
+    for i in 1:size_states
+        for (n,a) in enumerate(a0) 
+        
+            rhs = zeros(size_states)
+            Φ = zeros(size_states)
+
+            for j in 1:size_states
+                
+                #=
+                if typeof(dp) != Dolo.DiscretizedIIDProcess
+                    m = Dolo.inode(dp)[j,1]
+                    w = Dolo.iweight(dp,)
+                else 
+                    x = dprocess.integration_nodes[j,1]
+                    w = dprocess.integration_weights[j]
+
+                end
+                =#
+
+                #inc = states[j,1]
+                inode = Dolo.inode(dp,i,j) 
+                weight = Dolo.iweight(dp,i,j)
+
+                #W = exp(inc) + a*m.p.r # M' = AR + y
+                state = g(inode,s,x,inode,p) # s = g(m,a,m,p), half_transition
+
+                C = φ1[j](W) # c'(M') using c_(i-1)(.)  
+                Φ[j] = m.p.β * prob * (C/m.p.cbar)^(-m.p.γ) * (m.p.r) 
+
+            end
+        end
+        
+    end
 end
 
 function egm()
