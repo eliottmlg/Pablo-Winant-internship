@@ -360,9 +360,12 @@ random = UNormal(;σ=hello)
 new = discretize(random)
 uncertain = SVector(new.integration_nodes[:]...)
 
-
-exogenous = UNormal(;σ=0.1)
-dp = discretize(exogenous)
+using Dolo: UNormal, discretize  # dependence on Dolo is actually quite minimal, we just use the exogenous shock
+σ_y = 0.1
+exogenous = UNormal(;σ=σ_y)
+exogenous
+typeof(UNormal(;σ=σ_y))
+dp = discretize(exogenous, n=5)
 x = SVector(dp.integration_nodes[:]...) # nodes 
 w = SVector(dp.integration_weights[:]...) # weights
 integration=(w, x)
@@ -556,6 +559,8 @@ transition = eval(code)
 using StaticArrays
 m_, s_, x_, p_ = model.calibration[:exogenous, :states, :controls, :parameters]
 m,s,x,p = [SVector(e...) for e in model.calibration[:exogenous, :states, :controls, :parameters]]
+model.symbols[:parameters][5]
+model.calibration
 mvec = [SVector(m...)  for i = 1:10]
 mvec = cat([m' for i=1:100]...; dims=1)
 transition(m,s,x,m,p)
@@ -591,3 +596,131 @@ Dolo.get_variables(model)
 mvec = [SVector(m...)  for i = 1:10]
 mvec = cat([m' for i=1:10]...; dims=1)
 transition(m,s,x,m,p)
+
+# testing n_inodes for different processes
+
+# IID 
+mutable struct DiscretizedIIDProcess <: AbstractDiscretizedProcess
+    # nodes::Matrix{Float64}
+    grid::EmptyGrid
+    integration_nodes::Matrix{Float64}
+    integration_weights::Vector{Float64}
+end
+
+DiscretizedIIDProcess(x, w) = DiscretizedIIDProcess(EmptyGrid{size(x,2)}(), x, w)
+
+n_nodes(dp::DiscretizedIIDProcess) = 0
+n_inodes(dp::DiscretizedIIDProcess, i::Int) = size(dp.integration_nodes, 1)
+inode(dp::DiscretizedIIDProcess, i::Int, j::Int) = dp.integration_nodes[j, :]
+iweight(dp::DiscretizedIIDProcess, i::Int, j::Int) = dp.integration_weights[j]
+node(dip::DiscretizedIIDProcess, i::Int) = fill(NaN, n_inodes(dip, 1))
+
+# MC 
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/rbc_mc.yaml"
+readlines(filename)
+model = yaml_import(filename)
+
+shock = Dolo.get_exogenous(model)
+dp = Dolo.discretize(shock)
+typeof(dp)
+dp.values
+dp.transitions
+dp.grid
+dp.grid.nodes # nodes only, no n
+dp.grid.nodes[1]
+
+Dolo.n_nodes(dp) # size of matrix states
+Dolo.n_inodes(dp,1)
+Dolo.iweight(dp,1,1)
+Dolo.default_index(dp)
+dp
+Dolo.inode(dp,1,1)
+Dolo.node(dp,1)
+
+# AR
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/neoclassical.yaml"
+readlines(filename)
+model = yaml_import(filename)
+
+shock = Dolo.get_exogenous(model)
+dp = Dolo.discretize(shock)
+typeof(dp)
+dp.values
+dp.transitions
+dp.grid
+dp.grid.n # exog grid 
+dp.grid.nodes
+dp.grid.nodes[1]
+dp.integration_nodes
+dp.integration_nodes[5]
+dp.integration_weights[1]
+
+Dolo.n_nodes(dp) # size of matrix states
+Dolo.n_inodes(dp,1) # given in node 1 you can go to # nodes
+Dolo.iweight(dp,1,1)
+Dolo.default_index(dp)
+dp
+Dolo.inode(dp,1,1)
+Dolo.node(dp,1)
+
+
+### integration_nodes for IID
+
+exogrid = discretize[1].exo
+exogrid.n
+
+endogrid = discretize[1].endo
+endogrid.n
+grid_endo = range(grid_endo.min, grid_endo.max; length = grid_endo.n)
+grid_endo.min
+typeof(grid_endo)
+Dolo.n_nodes(grid_endo)
+
+N_m = max(Dolo.n_nodes(grid_exo),1) 
+
+
+grid, dprocess = Dolo.discretize(model)
+dprocess
+grid_endo = grid.endo
+grid_exo = grid.exo
+
+N_m = max(Dolo.n_nodes(grid_exo),1) 
+Dolo.inode(dprocess,1,1)
+grid.endo.n
+grid.endo.nodes
+Dolo.nodes(grid_endo)
+grid_fixed = grid_endo
+
+nodes = Dolo.inode(dprocess,1,7)
+Dolo.nodes(grid_exo)
+
+####
+
+sigma = Array{Float64}(undef, 1, 1)
+    sigma[1,1] = 0.01
+    ar1 = Dolo.VAR1(ρ = 0.95, Σ = sigma)
+    mc = Dolo.discretize(ar1; n=9)
+    states = mc.values
+    transitions = mc.transitions
+
+    ###
+
+    shock = Dolo.get_exogenous(model)
+    Dolo.get_domain(shock) # does not work
+    grid, dprocess = Dolo.discretize(model)
+Dolo.get_integration_nodes(dprocess) # does not work 
+dprocess.integration_nodes #works!
+Dolo.inode(dprocess,1,1) #pb is it only takes one value and not the vector of integration nodes
+x = [Dolo.inode(dprocess, 1,i) for i=1:size(dprocess.integration_nodes,1)] # actually useless, line below easier
+dprocess.integration_nodes
+dprocess.integration_weights
+Dolo.iweight(dp,1,1)
+
+function discretize(mvn::MvNormal; n=5::Union{Int, Vector{Int}}) #does not work
+    x, w = QE.qnwnorm(n, mvn.μ, mvn.Σ)
+    DiscretizedIIDProcess(x, w)
+end
+
+
+p = SVector(model.calibration[:parameters]...)
+x = SVector(model.calibration[:controls]...)
