@@ -49,6 +49,11 @@ end
 
 # initial policy function
 φ0 = Vector{Any}(undef, size_states)
+function φ1(i, s::SVector)::SVector # i is the current exogenous state, takes state at i
+    #s::[w] returns these irrespective of i
+    #x::[c] 
+    return s, x
+end
 
 # calibration 
 m_, s_, mr_, a_, x_, p_ = model.calibration[:exogenous, :states, :expectations, :poststates, :controls, :parameters]
@@ -63,16 +68,16 @@ s0 = Dolo.nodes(grid_endo)
 a0 = Dolo.nodes(grid_fixed)
 
 function consumption_a(model,φ1)
-
-    c_a = Matrix{Float64}(undef, length(a_grid), size_states)
-
+    φ1 = φ1
+    c_a = Matrix{typeof{x}}(undef, length(a_grid), size_states)
+    
     for i in 1:size_states
         for (n,a) in enumerate(a0) 
-        
-            rhs = zeros(size_states)
+            
+            m = Dolo.node(dp,i)   # TODO convert to SVector
+            rhs = mr*0.0
             zz = zeros(size_states)
-            iweight_vec = Dolo.iweight(dp,i,:)
-
+                        
             for j in 1:size_states
                 
                 #=
@@ -88,26 +93,36 @@ function consumption_a(model,φ1)
 
                 #inc = states[j,1]
                 #prob = transitions[i,j]
-                inode = Dolo.inode(dp,i,j) 
-                iweight = Dolo.iweight(dp,i,j)
+                M = Dolo.inode(dp,i,j) 
+                w = Dolo.iweight(dp,i,j)
 
                 #W = exp(inc) + a*m.p.r # M' = AR + y
-                ss = g(inode,s,x,inode,p) # S = g(m,a,M), half_transition
+                ss = g(m,a,M,p) # S = g(m,a,M), half_transition
 
-                xx = φ1[j](ss) # c'(M') using c_(i-1)(.)  
+                # xx = φ1[j](ss) # c'(M') using c_(i-1)(.)  
+                ss, xx = φ1(j,ss) # c'(M') using c_(i-1)(.)  
                 
                 #Φ[j] = m.p.β * prob * (C/m.p.cbar)^(-m.p.γ) * (m.p.r) 
-                zz = iweight * h(inode,ss,xx,p) # z = E(h(M,S,X)), expectation
+                zz[j] = w * h(M,ss,xx,p) # z = E(h(M,S,X)), expectation
+
             end
             #rhs = LinearAlgebra.dot(Φ, transitions[i,:])
+            rhs += sum(Dolo.iweight(dp,i,j) * zz[j] for j=1:size_states)
+
             #c_a[n, i] = m.p.cbar * (rhs)^(-1.0/m.p.γ)
-            rhs = LinearAlgebra.dot(zz, iweight_vec)
-            c_a[n,i] = τ(inode,a,zz,p) # c = \tau(m,a,z), direct_response_egm
+            τ(m,a,zz,p) #print
+            c_a[n,i] = τ(m,a,zz,p) # c = \tau(m,a,z), direct_response_egm
         end    
     end
 end
 
-function egm(model; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
+
+
+a = mr*0.0
+a += mr
+consumption_a(model, φ1)
+
+function egm(model; φ=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
     #states = m.markovpricess[1]
     inodes_vec = dprocess.integration_nodes
     logs = []
@@ -128,5 +143,32 @@ function egm(model; φ=m.φ, T=500, trace=false, resample=false, τ_η=1e-8)
     end
 end
 
-@time φs = egm(model)
+struct MyDR
+    itp::Vector{Any}
+end
+
+(mydr::MyDR)(i,s) = mydr.itp[i](s)
+SVector(1...)
+SVector(Dolo.node( dp,2)...)
+mr
+zeros(typeof(mr), 10)
+
+function φ(i, s::SVector)::SVector # i is the current exogenous state, takes state at i
+    #s::[w] returns these irrespective of i
+    #x::[c] 
+    return s, x
+end
+φ(1,s0[1])
+
+SVector(1,2,3)
+SVector{2,Any}(x1,x2,...)
+consumption_a(φ)   #Vector{SVector}#
+
+function φ(i, s::Vector{T})::SVector{T} where T
+    # s: [w]
+    # x: [c]
+    
+end
+
+@time φs = egm(model, φ)
 
