@@ -724,3 +724,36 @@ end
 
 p = SVector(model.calibration[:parameters]...)
 x = SVector(model.calibration[:controls]...)
+
+# previously in egmDolo.jl
+
+arb = Dolo.get_equation_block(model, "arbitrage")
+tran = Dolo.get_assignment_block(model, "transition")
+h = Dolo.get_assignment_block(model, "expectation")
+g = Dolo.get_assignment_block(model, "half_transition")
+τ = Dolo.get_assignment_block(model, "direct_response_egm")
+aτ = Dolo.get_assignment_block(model, "reverse_state")
+
+dp = Dolo.discretize(shock, n = grid[:exo][:n])
+typeof(dp)
+dp.grid
+dp.integration_nodes
+dp.integration_weights
+Dolo.iweight(dp,1,1) # transition probabilities
+Dolo.n_inodes(dp,1) # nb of possible future states given current state i
+size_states = Dolo.n_nodes(dp) # size of matrix states
+
+
+model.domain
+Dolo.get_domain(grid)
+domain = Dolo.get_domain(model)
+grid.states
+grid.min
+grid.max 
+grid = Dolo.get_discretization_options(model)
+grid[:exo][:n]
+grid[:endo][:n]
+
+grid, dproces = Dolo.discretize(model)
+grid_endo = grid.endo
+grid_exo = grid.exo
