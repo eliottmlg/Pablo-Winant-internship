@@ -10,6 +10,7 @@ using QuantEcon
 using LinearAlgebra
 import Dolang
 
+
 # declaring model
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
@@ -67,14 +68,15 @@ grid_fixed = grid_endo
 s0 = Dolo.nodes(grid_endo)
 a0 = Dolo.nodes(grid_fixed)
 
+
 function consumption_a(model,φ1)
     φ1 = φ1
-    c_a = Matrix{typeof{x}}(undef, length(a_grid), size_states)
+    c_a = Matrix{typeof(x)}(undef, length(a0), size_states)
     
     for i in 1:size_states
         for (n,a) in enumerate(a0) 
             
-            m = Dolo.node(dp,i)   # TODO convert to SVector
+            m = SVector{length(Dolo.node(dp,i))}(Dolo.node(dp,i))
             rhs = mr*0.0
             zz = zeros(size_states)
                         
@@ -93,7 +95,7 @@ function consumption_a(model,φ1)
 
                 #inc = states[j,1]
                 #prob = transitions[i,j]
-                M = Dolo.inode(dp,i,j) 
+                M = SVector{length(Dolo.inode(dp,i,j))}(Dolo.inode(dp,i,j))
                 w = Dolo.iweight(dp,i,j)
 
                 #W = exp(inc) + a*m.p.r # M' = AR + y
@@ -116,12 +118,17 @@ function consumption_a(model,φ1)
     end
 end
 
-
-
-a = mr*0.0
-a += mr
 consumption_a(model, φ1)
 
+a0
+SVector{length(Dolo.inode(dp,1,1))}(Dolo.inode(dp,1,1))
+SVector{5}(Dolo.node(dp,1))[1]
+SVector(1,...)
+Dolo.node(dp,1)
+Svector(Dolo.node(dp,1),...)
+SVector(1,2,3)
+vec = (1,2,3)
+SVector{5}(Dolo.node(dp,1))
 function egm(model; φ=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
     #states = m.markovpricess[1]
     inodes_vec = dprocess.integration_nodes
