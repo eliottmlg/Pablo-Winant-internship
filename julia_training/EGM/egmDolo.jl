@@ -15,6 +15,7 @@ import Dolang
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
+model.symbols
 
 #equations
 F_tran = Dolo.get_factory(model, "transition")
@@ -76,7 +77,7 @@ function consumption_a(model,φ1)
     for i in 1:size_states
         for (n,a) in enumerate(a0) 
             
-            m = SVector{length(Dolo.node(dp,i))}(Dolo.node(dp,i))
+            m = SVector{length(Dolo.node(dp,i))}(Dolo.node(dp,i)) # convert to Svector{Float64}
             rhs = mr*0.0
             zz = zeros(size_states)
                         
@@ -95,10 +96,11 @@ function consumption_a(model,φ1)
 
                 #inc = states[j,1]
                 #prob = transitions[i,j]
-                M = SVector{length(Dolo.inode(dp,i,j))}(Dolo.inode(dp,i,j))
+                M = SVector{length(Dolo.inode(dp,i,j))}(Dolo.inode(dp,i,j)) # convert to Svector{Float64}
                 w = Dolo.iweight(dp,i,j)
 
                 #W = exp(inc) + a*m.p.r # M' = AR + y
+                #ss = g(m,a,M,p) # S = g(m,a,M), half_transition   NEEDS 5 arguments
                 ss = g(m,a,M,p) # S = g(m,a,M), half_transition
 
                 # xx = φ1[j](ss) # c'(M') using c_(i-1)(.)  
@@ -120,15 +122,7 @@ end
 
 consumption_a(model, φ1)
 
-a0
-SVector{length(Dolo.inode(dp,1,1))}(Dolo.inode(dp,1,1))
-SVector{5}(Dolo.node(dp,1))[1]
-SVector(1,...)
-Dolo.node(dp,1)
-Svector(Dolo.node(dp,1),...)
-SVector(1,2,3)
-vec = (1,2,3)
-SVector{5}(Dolo.node(dp,1))
+
 function egm(model; φ=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
     #states = m.markovpricess[1]
     inodes_vec = dprocess.integration_nodes
