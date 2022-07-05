@@ -25,33 +25,6 @@ F_τ = Dolo.get_factory(model, "direct_response_egm")
 F_h = Dolo.get_factory(model, "expectation")
 F_aτ =  Dolo.get_factory(model, "reverse_state")
 
-Dolo.get_factory(model, "half_transition")
-specs = RECIPES[:dtcc][:specs]
-Symbol(half_transition)
-keys(specs)
-
-filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/rbc_mc.yaml"
-readlines(filename)
-model = yaml_import(filename)
-model.symbols
-specs = RECIPES[:dtcc][:specs]
-specs[:half_transition]
-recipe = specs[Symbol("half_transition")]
-this = recipe[:eqs]
-enumerate(this)
-this[1][3]
-
-arguments = OrderedDict(
-    Symbol(l[3]) => [stringify(e,l[2]) for e in symbols[Symbol(l[1])]]
-    for l in recipe[:eqs] if !(l[1]=="parameters")
-)
-
-
-collect(keys(F_g.arguments))
-symbols = Dolo.get_symbols(model)
-symbols[Symbol(:poststates)]
-
-
 code_tran = Dolang.gen_generated_gufun(F_tran)
 tran = eval(code_tran)
 code_arb = Dolang.gen_generated_gufun(F_arb)
@@ -68,7 +41,7 @@ h = eval(code_h)
 # exogenous shock
 shock = Dolo.get_exogenous(model)
 dp = Dolo.discretize(shock)
-N_m = max(Dolo.n_nodes(grid_exo),1)
+# N_m = max(Dolo.n_nodes(grid_exo),1) will not work for IID processes because n_nodes(grid_exo) not defined
 if typeof(dp) != Dolo.DiscretizedIIDProcess
     size_states = Dolo.n_nodes(dp)
 else 
@@ -76,11 +49,10 @@ else
 end
 
 # initial policy function
-φ0 = Vector{Any}(undef, size_states)
-function φ1(i, s::SVector)::SVector # i is the current exogenous state, takes state at i
-    #s::[w] returns these irrespective of i
-    #x::[c] 
-    return s, x
+#φ0 = Vector{Any}(undef, size_states)
+function φfunction(i, ss::SVector{1})::SVector # i is the current exogenous state, takes state at i
+    xx = min(ss[1], 1.0 + 0.01*(ss[1]-1.0))
+    return ss, xx
 end
 
 # calibration 
@@ -95,20 +67,8 @@ grid_fixed = grid_endo
 s0 = Dolo.nodes(grid_endo)
 a0 = Dolo.nodes(grid_fixed)
 
-# recursively make all keys at any layer of nesting a symbol
-# included here instead of util.jl so we can call it on RECIPES below
-_symbol_dict(x) = x
-_symbol_dict(d::AbstractDict) =
-    Dict{Symbol,Any}([(Symbol(k), _symbol_dict(v)) for (k, v) in d])
-const src_path = dirname(@__FILE__)
-const pkg_path = dirname(src_path)
-Pkg.add("YAML")
-import YAML; using YAML: load_file, load
-const RECIPES = _symbol_dict(load_file(joinpath(src_path, "recipes.yaml")))
-specs = RECIPES[:dtcc][:specs]
-
-function consumption_a(model,φ1)
-    φ1 = φ1
+function consumption_a(model,φ)
+    φ1 = φ
     c_a = Matrix{typeof(x)}(undef, length(a0), size_states)
     
     for i in 1:size_states
@@ -157,56 +117,60 @@ function consumption_a(model,φ1)
     end
 end
 
-consumption_a(model, φ1)
+consumption_a(model, φfunction)
 
+# interpolation 
+itp = Vector{Any}(undef,size_states) # empty vector to host interpolation objects 
 
-function egm(model; φ=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
+struct MyDR # creating a structure for neater incorporation
+    itp::Vector{Any}
+end
+(mydr::MyDR)(i,s) = mydr.itp[i](s)
+
+function egm(model; φfunction=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
     #states = m.markovpricess[1]
     inodes_vec = dprocess.integration_nodes
     logs = []
-    local w_grid, c_a, φ0
-    a_grid = a0
-    φ0 = φ
+    #local w_grid, c_a, φ0
+    #w_grid = s0
+    local c_a, φ0
+
+    φ0 = φfunction
 
     for t in 1:T
-        trace ? push!(logs,deepcopy(φ0)) : nothing
+        trace ? push!(logs,deepcopy(itp)) : nothing
         c_a = consumption_a(model,φ0) # c_new = (u')^(-1)(A)
 
         for i in 1:length(inodes_vec) 
             #w_grid = a_grid + c_a[:,i] # M_new = A + c_new
             w_grid = aτ(m,a,c_a[:,i],p) # s = a\tau(m,a,x), reverse_state
-            c_a[:,i] = min(w_grid, c_a[:,i]) # c_new cannot exceed M
-            φ0[i] = LinearInterpolation(w_grid, c_a[:,i]; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
+            c_a[:,i] = min.(w_grid, c_a[:,i]) # c_new cannot exceed M
+            itp[i] = LinearInterpolation(w_grid, c_a[:,1], extrapolation_bc = Line())
+            #φ0[i] = LinearInterpolation(w_grid, c_a[:,i]; extrapolation_bc=Line()) # reconstructing policy function c_new(M)
         end
+        res = MyDR(itp)
+        mydr(i,w_grid) = res.itp[i](w_grid)
+        # mydr(1,x)
     end
-end
+        if resample
+            for i in 1:size_states
+            # we resample the solution so that it interpolates exactly
+            # on the grid specified in m.w_grid (not the endogenous one.)
+            nx = min.(w_grid, mydr(i,w_grid))
+            itp[i] = LinearInterpolation(w_grid, nx, extrapolation_bc=Line())
+            end
+        end
+        res = MyDR(itp)
+        mydr(i,w_grid) = res.itp[i](w_grid)
+        # mydr(1,x)
 
-struct MyDR
-    itp::Vector{Any}
-end
-
-(mydr::MyDR)(i,s) = mydr.itp[i](s)
-SVector(1...)
-SVector(Dolo.node( dp,2)...)
-mr
-zeros(typeof(mr), 10)
-
-function φ(i, s::SVector)::SVector # i is the current exogenous state, takes state at i
-    #s::[w] returns these irrespective of i
-    #x::[c] 
-    return s, x
-end
-φ(1,s0[1])
-
-SVector(1,2,3)
-SVector{2,Any}(x1,x2,...)
-consumption_a(φ)   #Vector{SVector}#
-
-function φ(i, s::Vector{T})::SVector{T} where T
-    # s: [w]
-    # x: [c]
-    
+        if trace
+            return res, mydr, logs, w_grid, c_a
+        else
+            return res, mydr # 3-element vector, each element is an object of linear interpolation containing grid and values on the grid (10-element vector containing optimal dr(i,a))
+        end
 end
 
 @time φs = egm(model, φ)
+
 

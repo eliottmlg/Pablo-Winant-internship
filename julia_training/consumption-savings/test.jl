@@ -757,3 +757,124 @@ grid[:endo][:n]
 grid, dproces = Dolo.discretize(model)
 grid_endo = grid.endo
 grid_exo = grid.exo
+
+
+
+# wrong arguments, get_factory, gen_gufun, RECIPES
+
+Dolo.get_factory(model, "half_transition")
+specs = RECIPES[:dtcc][:specs]
+Symbol(half_transition)
+keys(specs)
+
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/rbc_mc.yaml"
+readlines(filename)
+model = yaml_import(filename)
+model.symbols
+specs = RECIPES[:dtcc][:specs]
+specs[:half_transition]
+recipe = specs[Symbol("half_transition")]
+this = recipe[:eqs]
+enumerate(this)
+this[1][3]
+
+arguments = OrderedDict(
+    Symbol(l[3]) => [stringify(e,l[2]) for e in symbols[Symbol(l[1])]]
+    for l in recipe[:eqs] if !(l[1]=="parameters")
+)
+
+
+collect(keys(F_g.arguments))
+symbols = Dolo.get_symbols(model)
+symbols[Symbol(:poststates)]
+
+
+# recursively make all keys at any layer of nesting a symbol
+# included here instead of util.jl so we can call it on RECIPES below
+_symbol_dict(x) = x
+_symbol_dict(d::AbstractDict) =
+    Dict{Symbol,Any}([(Symbol(k), _symbol_dict(v)) for (k, v) in d])
+const src_path = dirname(@__FILE__)
+const pkg_path = dirname(src_path)
+Pkg.add("YAML")
+import YAML; using YAML: load_file, load
+const RECIPES = _symbol_dict(load_file(joinpath(src_path, "recipes.yaml")))
+specs = RECIPES[:dtcc][:specs]
+
+
+# interpolating 
+
+struct MyDR 
+    itp::Array{Any}
+end
+
+mydrtest = MyDR([1,2])
+mydrtest.itp
+(mydr::MyDR)(i,s) = MyDR.itp[i](s)
+mydrtest.itp[1](s)
+
+(mydr::MyDR)(1,1)
+
+LinearInterpolation(s0, s0; extrapolation_bc=Line())
+(mydr::MyDR)(1,1) = MyDR(LinearInterpolation(s0, s0; extrapolation_bc=Line()))
+(mydr::MyDR)(i,s) = mydr.itp[i](s)
+
+
+x = [1.0, 2.0, 4.0]
+y = [[1.0,2.0,3.0]  [4.0,5.0,6.0]] 
+itptest = Vector{Any}(undef,2)
+itptest[1] = LinearInterpolation(x, y[:,1], extrapolation_bc = Line())
+itptest[2] = LinearInterpolation(x, y[:,2], extrapolation_bc = Line())
+res = MyDR(itptest)
+mydr(i,s) = res.itp[i](s)
+typeof(mydr)
+mydr(1,x)
+mydr(2,x)
+
+# now function or vector ?
+
+
+
+
+struct MyDR 
+    itp::Vector{Any} # length i 
+end
+
+MyDR(LinearInterpolation(x, y[:,1], extrapolation_bc = Line())
+
+
+
+(mydr::MyDR)(i,s) = mydr.itp[i](s)
+mydr.itp[i]
+
+
+for i in 1:2
+    itptest[i] = LinearInterpolation(x, y[:,i], extrapolation_bc = Line())
+    itptest[i]
+end 
+
+# end of file egmDolo
+
+(mydr::MyDR)(i,s) = mydr.itp[i](s)
+SVector(1...)
+SVector(Dolo.node( dp,2)...)
+mr
+zeros(typeof(mr), 10)
+
+function φ(i, s::SVector)::SVector # i is the current exogenous state, takes state at i
+    #s::[w] returns these irrespective of i
+    #x::[c] 
+    return s, x
+end
+φ(1,s0[1])
+
+SVector(1,2,3...)
+SVector{2,Any}(x1,x2,...)
+consumption_a(φ)   #Vector{SVector}#
+
+function φ(i, s::Vector{T})::SVector{T} where T
+    # s: [w]
+    # x: [c]
+    
+end
+
