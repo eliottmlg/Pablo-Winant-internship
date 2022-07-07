@@ -780,23 +780,28 @@ const RECIPES = _symbol_dict(load_file(joinpath(src_path, "recipes.yaml")))
 specs = RECIPES[:dtcc][:specs]
 
 # 6.07 fail occurs here #
+# I run only the part that deals with argument in get_factory()
 Symbol("half_transition") in keys(specs) # contradiction here, works here but not in egmDolo
 Dolo.get_factory(model, "half_transition") # at least sign that the good file is being used 
-Symbol(half_transition) in keys(specs)
-
-
-arguments = OrderedDict(
-    Symbol(l[3]) => [stringify(e,l[2]) for e in symbols[Symbol(l[1])]]
-    for l in recipe[:eqs] if !(l[1]=="parameters")
-)
-
-
-collect(keys(F_g.arguments))
+recipe = specs[Symbol("half_transition")]
 symbols = Dolo.get_symbols(model)
-symbols[Symbol(:poststates)]
+arguments = Dolo.OrderedDict(
+            Symbol(l[3]) => [Dolang.stringify(e,l[2]) for e in symbols[Symbol(l[1])]]
+            for l in recipe[:eqs] if !(l[1]=="parameters")
+        )
+# No problem, so it must be above in the function, or I am calling the function from the wrong file 
+
+# If I run the entire function get_factory(model::Model, eq_type::String) instead, I get:
+F_g = Dolo.get_factory(model, "half_transition")
+# moving specs = RECIPES[:dtcc][:specs] outside if-loop
+F_g = Dolo.get_factory(model, "half_transition")
+# still... 
+code_g = Dolang.gen_generated_gufun(F_g)
 
 
-# interpolating 
+
+
+# interpolating #
 
 struct MyDR 
     itp::Array{Any}

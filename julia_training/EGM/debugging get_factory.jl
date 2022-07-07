@@ -143,7 +143,7 @@ F_g = Dolo.get_factory(CSIID, "half_transition")
 # a problem of using the wrong file. It must be in the function itself.
 
 # I rewrite get_factory() for each equation
-function get_factory_noloop(model::Model, eq_type::String)
+function get_factory_noloopEGM(model::Model, eq_type::String)
     if eq_type == "arbitrage"
         defs_0 = Dolo.get_definitions(model; stringify=true)
         defs_1 = Dolo.get_definitions(model; tshift=1, stringify=true)
@@ -253,10 +253,10 @@ function get_factory_noloop(model::Model, eq_type::String)
        equations = get_assignment_block(model, eq_type)
        symbols = get_symbols(model)
        arguments = Dolo.OrderedDict(
-            :m => [stringify(e,0) for e in symbols[:exogenous]],
-            :a => [stringify(e,0) for e in symbols[:poststates]],
-            :z => [stringify(e,0) for e in symbols[:expectations]],
-            :p => [stringify(e) for e in symbols[:parameters]]
+            :m => [Dolang.stringify(e,0) for e in symbols[:exogenous]],
+            :a => [Dolang.stringify(e,0) for e in symbols[:poststates]],
+            :z => [Dolang.stringify(e,0) for e in symbols[:expectations]],
+            :p => [Dolang.stringify(e) for e in symbols[:parameters]]
             )
             
        ff = FunctionFactory(equations, arguments, definitions, Symbol(eq_type))
@@ -270,10 +270,10 @@ function get_factory_noloop(model::Model, eq_type::String)
        equations = get_assignment_block(model, eq_type)
        symbols = get_symbols(model)
        arguments = Dolo.OrderedDict(
-            :m => [stringify(e,0) for e in symbols[:exogenous]],
-            :a => [stringify(e,0) for e in symbols[:poststates]],
-            :x => [stringify(e,0) for e in symbols[:controls]],
-            :p => [stringify(e) for e in symbols[:parameters]]
+            :m => [Dolang.stringify(e,0) for e in symbols[:exogenous]],
+            :a => [Dolang.stringify(e,0) for e in symbols[:poststates]],
+            :x => [Dolang.stringify(e,0) for e in symbols[:controls]],
+            :p => [Dolang.stringify(e) for e in symbols[:parameters]]
             )
             
        ff = FunctionFactory(equations, arguments, definitions, Symbol(eq_type))
@@ -287,10 +287,10 @@ function get_factory_noloop(model::Model, eq_type::String)
        equations = get_assignment_block(model, eq_type)
        symbols = get_symbols(model)
        arguments = Dolo.OrderedDict(
-            :m => [stringify(e,0) for e in symbols[:exogenous]],
-            :s => [stringify(e,0) for e in symbols[:states]],
-            :z => [stringify(e,0) for e in symbols[:expectations]],
-            :p => [stringify(e) for e in symbols[:parameters]]
+            :m => [Dolang.stringify(e,0) for e in symbols[:exogenous]],
+            :s => [Dolang.stringify(e,0) for e in symbols[:states]],
+            :z => [Dolang.stringify(e,0) for e in symbols[:expectations]],
+            :p => [Dolang.stringify(e) for e in symbols[:parameters]]
             )
             
        ff = FunctionFactory(equations, arguments, definitions, Symbol(eq_type))
@@ -299,7 +299,10 @@ function get_factory_noloop(model::Model, eq_type::String)
 
 end
 # I get:
-F_g = get_factory_noloop(CSIID, "half_transition")
+F_g = Dolo.get_factory_noloopEGM(CSIID, "half_transition")
 # so I replace get_definitions by Dolo.get_definitions and rerun 
-
+# takes too long, instead I try append this new function to model.jl in my repository of Dolo.jl
+# actually running get_factory_noloopEGM() in model.jl then running the above get_variables
+F_g = Dolo.get_factory_noloopEGM(CSIID, "half_transition")
 code_g = Dolang.gen_generated_gufun(F_g)
+g = eval(code_g)
