@@ -760,23 +760,30 @@ grid_exo = grid.exo
 
 
 
-# wrong arguments, get_factory, gen_gufun, RECIPES
+# wrong arguments, get_factory, gen_gufun, RECIPES #
 
-Dolo.get_factory(model, "half_transition")
-specs = RECIPES[:dtcc][:specs]
-Symbol(half_transition)
-keys(specs)
-
-filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/rbc_mc.yaml"
+## TO RUN BEFORE THE REST 
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
-model.symbols
+# recursively make all keys at any layer of nesting a symbol
+# included here instead of util.jl so we can call it on RECIPES below
+_symbol_dict(x) = x
+_symbol_dict(d::AbstractDict) =
+    Dict{Symbol,Any}([(Symbol(k), _symbol_dict(v)) for (k, v) in d])
+const src_path = dirname(@__FILE__)
+const pkg_path = dirname(src_path)
+Pkg.add("YAML")
+import YAML; using YAML: load_file, load
+# add recipes.yaml wherever the next line indiccates the error 
+const RECIPES = _symbol_dict(load_file(joinpath(src_path, "recipes.yaml")))
 specs = RECIPES[:dtcc][:specs]
-specs[:half_transition]
-recipe = specs[Symbol("half_transition")]
-this = recipe[:eqs]
-enumerate(this)
-this[1][3]
+
+# 6.07 fail occurs here #
+Symbol("half_transition") in keys(specs) # contradiction here, works here but not in egmDolo
+Dolo.get_factory(model, "half_transition") # at least sign that the good file is being used 
+Symbol(half_transition) in keys(specs)
+
 
 arguments = OrderedDict(
     Symbol(l[3]) => [stringify(e,l[2]) for e in symbols[Symbol(l[1])]]
@@ -787,19 +794,6 @@ arguments = OrderedDict(
 collect(keys(F_g.arguments))
 symbols = Dolo.get_symbols(model)
 symbols[Symbol(:poststates)]
-
-
-# recursively make all keys at any layer of nesting a symbol
-# included here instead of util.jl so we can call it on RECIPES below
-_symbol_dict(x) = x
-_symbol_dict(d::AbstractDict) =
-    Dict{Symbol,Any}([(Symbol(k), _symbol_dict(v)) for (k, v) in d])
-const src_path = dirname(@__FILE__)
-const pkg_path = dirname(src_path)
-Pkg.add("YAML")
-import YAML; using YAML: load_file, load
-const RECIPES = _symbol_dict(load_file(joinpath(src_path, "recipes.yaml")))
-specs = RECIPES[:dtcc][:specs]
 
 
 # interpolating 
