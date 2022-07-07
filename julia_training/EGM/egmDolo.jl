@@ -16,7 +16,7 @@ filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models
 readlines(filename)
 model = yaml_import(filename)
 model.symbols
-
+Dolo.get_assignment_block(model, "reverse_state")
 #equations
 F_tran = Dolo.get_factory(model, "transition")
 F_arb = Dolo.get_factory(model, "arbitrage")[1]
