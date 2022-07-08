@@ -13,6 +13,7 @@ import Dolang
 
 # declaring model
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
+filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/EGM/consumption_savings_mc.yaml"
 readlines(filename)
 model = yaml_import(filename)
 
@@ -41,16 +42,30 @@ h = eval(code_h)
 shock = Dolo.get_exogenous(model)
 dp = Dolo.discretize(shock)
 # N_m = max(Dolo.n_nodes(grid_exo),1) will not work for IID processes because n_nodes(grid_exo) not defined
+#=
 if typeof(dp) != Dolo.DiscretizedIIDProcess
     size_states = Dolo.n_nodes(dp)
-else 
+else    
     size_states = size(dp.integration_nodes,1)
-    inodes = zeros(SVector{1,Float64}, size_states)
-    for i in 1:size_states
-        inodes[i] = SVector(Dolo.get_integration_nodes(dp,1)[i][2]...)
-    end
 end
-inodes
+=#
+size_states = Dolo.n_inodes(dp,1)
+
+#= first try
+inodes = zeros(SVector{1,Float64}, size_states)
+for i in 1:size_states
+    inodes[i] = SVector(Dolo.get_integration_nodes(dp,1)[i][2]...) # does not work with MC
+end
+=#
+#=
+intnodes = Matrix{SVector}(undef,size_states,length(Dolo.inode(dp,1,1)))
+    for i in 1:size_states
+        for j in 1:length(Dolo.inode(dp,1,i))
+            intnodes[i,j] = SVector(Dolo.inode(dp,1,i)[j]...) # does not work with MC
+        end
+    end
+intnodes
+=#
 
 # initial policy function
 #φ0 = Vector{Any}(undef, size_states)
@@ -79,10 +94,9 @@ function consumption_a(model,φ)
     for i in 1:size_states
         for (n,a) in enumerate(a0) 
             
-            #m = SVector{length(Dolo.node(dp,i))}(Dolo.node(dp,i)) # convert to Svector{Float64}
-            m = inodes[i]
-            Ezz = mr*0.0
-            zz = zeros(SVector{1,Float64}, size_states)
+            m = SVector(Dolo.inode(dp,i,i)...)
+            zz = mr*0.0
+            zzj = zeros(SVector{1,Float64}, size_states)
                         
             for j in 1:size_states
                 
@@ -99,9 +113,10 @@ function consumption_a(model,φ)
 
                 #inc = states[j,1]
                 #prob = transitions[i,j]
+                #m = SVector{length(Dolo.node(dp,i))}(Dolo.node(dp,i)) # convert to Svector{Float64}
                 #M = SVector{length(Dolo.inode(dp,i,j))}(Dolo.inode(dp,i,j)) # convert to Svector{Float64}
-                M = inodes[j]
-                w = Dolo.iweight(dp,i,j)
+                M = SVector(Dolo.inode(dp,i,j)...)
+                w = SVector(Dolo.iweight(dp,i,j)...)
 
                 #W = exp(inc) + a*m.p.r # M' = AR + y
                 #ss = g(m,a,M,p) # S = g(m,a,M), half_transition   NEEDS 5 arguments
@@ -111,24 +126,24 @@ function consumption_a(model,φ)
                 ss, xx = φ1(j,ss) # c'(M') using c_(i-1)(.)  
                 
                 #Φ[j] = m.p.β * prob * (C/m.p.cbar)^(-m.p.γ) * (m.p.r) 
-                zz[j] = w * h(M,ss,xx,p) # z = E(h(M,S,X)), expectation
+                zzj[j] = w * h(M,ss,xx,p) # z = E(h(M,S,X)), expectation
 
             end
             #rhs = LinearAlgebra.dot(Φ, transitions[i,:])
-            Ezz += sum(Dolo.iweight(dp,i,j) * zz[j] for j=1:size_states)
+            #Ezz += sum(Dolo.iweight(dp,i,j) * zz[j] for j=1:size_states)
+            zz += sum(zzj[j] for j=1:size_states)
 
             #c_a[n, i] = m.p.cbar * (rhs)^(-1.0/m.p.γ)
-            τ(m,a,Ezz,p) #print
-            c_a[n,i] = τ(m,a,Ezz,p) # c = \tau(m,a,z), direct_response_egm
+            τ(m,a,zz,p) #print
+            c_a[n,i] = τ(m,a,zz,p) # c = \tau(m,a,z), direct_response_egm
         end    
     end
     return c_a
 end
 
 # computing updated deicisions after from initial decision rule to iteration one  
-cprime = consumption_a(model, φfunction)
-cprime[1:1000,1:5] # same consumption for all state of m
-
+cprime = consumption_a(model, φfunction)# same consumption for all state of m
+# expected since shock is iid
 # plotting for exogenous state 1 updated consumption along fixed grid A 
 function plotcprime1(cprime)
     plt = plot()
@@ -146,8 +161,6 @@ struct MyDR # creating a structure for neater incorporation
     itp::Vector{Any}
 end
 (mydr::MyDR)(i,s) = mydr.itp[i](s)
-
-# toy 
 
 function toyegm(model; φfunction=nothing, T=500, trace=false, resample=false, τ_η=1e-8)
     #states = m.markovpricess[1]
@@ -187,8 +200,7 @@ function toyegm(model; φfunction=nothing, T=500, trace=false, resample=false, �
 end
 
 @time φs = toyegm(model; φfunction)
-φs
-c
+
 
 
 

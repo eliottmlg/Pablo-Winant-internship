@@ -502,7 +502,7 @@ dp = Dolo.discretize(model.exogenous)
 dp.grid
 dp.integration_nodes
 dp.integration_weights
-Dolo.iweight(dp,1,1) # transition probabilities
+Dolo.iweight(dp,1,2) # transition probabilities
 Dolo.n_inodes(dp,1) # nb of possible future states given current state i
 Dolo.n_nodes(dp) # size of matrix states
 Dolo.inode(dp,1,1)
