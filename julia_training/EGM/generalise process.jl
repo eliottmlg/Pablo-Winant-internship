@@ -81,7 +81,7 @@ Dolo.iweight(dp,1,2) # access integration weights, from state 1(irrelvant) to st
 
 #########
 
-# Adressing grids now
+# Adressing discretize() to obtain object grid, to get s0,a0
 
 # MC
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/EGM/consumption_savings_mc.yaml"
@@ -94,13 +94,28 @@ Dolo.get_discretization_options(model) # works fine
 # in fact the wrong function is called (from processes.jl)
 # need to find a way to use the right method for the function
 # WAY FOUND: change name discretize() to discretizemodel()
+# so will have to run the function running egm 
+Dolo.discretizemodel(model) # type CartesianDomain has no field endo
+# conducting tests 
+model.data
+calibration = Dolo.get_calibration(model)
+symbols = Dolo.get_symbols(model)
+exogenous = Dolo.get_exogenous(model, symbols[:exogenous], calibration.flat)
+Dolo.get_exogenous(model)
+Dolo.get_domain(model)
+model.domain
+# come back to discretize(), maybe it uses another method I thought
+Dolo.discretize(model;Dict()...)
+
 
 # IID 
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/Dolo.jl/examples/models/consumption_savings_iid.yaml"
 readlines(filename)
 model = yaml_import(filename)
 typeof(model)
-Dolo.discretize(model) # but works with IID process
+grid, dp = Dolo.discretize(model) # but works with IID process
+model.domain
+Dolo.discretizemodel(model)# does not work either on IID
 
 # VAR1
 filename = "C:/Users/t480/GitHub/Pablo-Winant-internship/julia_training/EGM/consumption_savings_ar1.yaml"
@@ -108,4 +123,3 @@ readlines(filename)
 model = yaml_import(filename)
 typeof(model)
 Dolo.discretize(model)
-
