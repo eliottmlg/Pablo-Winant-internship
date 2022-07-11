@@ -21,7 +21,7 @@ m = let
     w = SVector(dp.integration_weights[:]...) # weights
 
     # Initial decision rule (consumption as a function of available wealth)
-    φ = w -> min(w, 1.0 + 0.01*(w-1.0))
+    #φ = w -> min(w, 1.0 + 0.01*(w-1.0))
     φ = w -> w*0.9 #  min(w, 1.0 + 0.01*(w-1.0))
 
     # This is the discretization of...
