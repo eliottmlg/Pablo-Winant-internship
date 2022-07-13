@@ -206,10 +206,10 @@ function toyegm(model; φfunction=nothing, T=500, trace=false, resample=false, �
                 w_grid[n] = aτ(m,a,cprime[n,i],p) # s = a\tau(m,a,x), reverse_state
                 cprime[n,i] = min(w_grid[n], cprime[n,i]) # c_new cannot exceed M
             end
-            cprimeFloat = reinterpret(Float64, cprime)
-            s0Float = reinterpret(Float64,w_grid)
-            itp[i] = LinearInterpolation(s0Float, cprimeFloat[:,i], extrapolation_bc = Line())
-        end
+            cprimeFloat = reinterpret(Float64, cprime) # only works in one dimension 
+            s0Float = reinterpret(Float64,w_grid) # needs one poststate, many controls allowed 
+            itp[i] = LinearInterpolation(s0Float, cprimeFloat[:,i], extrapolation_bc = Line()) # cprime good?
+        end # itp linear combs
         trace ? res = MyDR(itp) : nothing
         trace ? push!(logs,deepcopy(res)) : nothing
     end

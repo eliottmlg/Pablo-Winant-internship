@@ -1,0 +1,622 @@
+@import url("https://use.typekit.net/oat8wja.css");
+
+/*Variables*/
+:root {
+  --bg: white;
+  --text: black;
+}
+
+html {
+  height: 100%;
+}
+
+/* applies to GIF and PNG images; avoids blurry edges */
+img[src$=".gif"], img[src$=".png"] {
+    image-rendering: -moz-crisp-edges;         /* Firefox */
+    image-rendering:   -o-crisp-edges;         /* Opera */
+    image-rendering: -webkit-optimize-contrast;/* Webkit (non-standard naming) */
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;  /* IE (non-standard property) */
+}
+
+/*Typografie Header*/
+html, body {
+  font-family: neue-haas-unica, sans-serif;
+  font-weight:400;
+  font-size: 11px;
+  font-size: calc(11px + (14 - 11) * ((100vw - 320px) / (1600 - 320)));
+  line-height: 200%;
+  -webkit-font-smoothing: auto;
+  -webkit-text-size-adjust: none;
+  -webkit-text-size-adjust: 100%;
+  line-height: 125%;
+  overflow-x: hidden;
+}
+
+.people {
+  position: fixed;
+  left: 50%;
+  width: 45%;
+  height: 60%;
+  background-image: url(images/about/blank.jpg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  top: 6em;
+  z-index: -99;
+  }
+
+ .dark .people {
+  background-image: url(images/about/b-blank.jpg);
+ }
+  a:link:hover {
+text-decoration: underline;}
+
+jahr::before {
+content: " ";
+  }
+
+.startseite jahr {
+    display: block;
+  }
+
+
+  #ronja:hover, #miles:hover, #vincent:hover, #ira:hover, #sami:hover {
+    text-decoration: underline;
+  }
+
+#ronja:hover ~ .people {
+  background-image: url(images/about/ronja.jpg);
+}
+
+#miles:hover ~ .people {
+  background-image: url(images/about/miles.jpg);
+}
+
+#ira:hover ~ .people {
+  background-image: url(images/about/ira.jpg);
+}
+
+#vincent:hover ~ .people {
+  background-image: url(images/about/vincent.jpg);
+}
+
+#sami:hover ~ .people {
+  background-image: url(images/about/sami.jpg);
+}
+
+/*darkmode*/
+
+.dark #ronja:hover ~ .people {
+  background-image: url(images/about/b-ronja.jpg);
+}
+
+.dark #miles:hover ~ .people {
+  background-image: url(images/about/b-miles.jpg);
+}
+
+.dark #ira:hover ~ .people {
+  background-image: url(images/about/b-ira.jpg);
+}
+
+.dark #vincent:hover ~ .people {
+  background-image: url(images/about/b-vincent.jpg);
+}
+
+.dark #sami:hover ~ .people {
+  background-image: url(images/about/b-sami.jpg);
+}
+
+
+
+h1.title {
+  font-size: 5em;
+  font-weight: bold;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: 2.5%;
+  visibility: hidden;
+  margin-top: -0.15em;
+  margin-left: -0.055em;
+}
+
+h1:hover, .title a:hover {
+  text-decoration: none;
+}
+
+.startseite h1.title {
+  visibility: visible;
+}
+
+.quote a, .aitext:first-line, menu label, footer a{
+  font-weight: 500;
+  font-size: 1.8em;
+  line-height: 90%;
+}
+
+menu label, footer a {
+  text-transform: uppercase;
+}
+
+
+
+.logo {
+  position: fixed;
+  top: 1.5%;
+  padding-top: 0.25em;
+  left: 0.5%;
+  height: 1.85em;
+  width: 1.85em;
+  background-image: url(images/logo.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  }
+
+.dark .logo {
+  background-image: url(images/logo-white.png); 
+}
+
+/*Typografie Projekte*/
+project-title {
+  font-weight: bold;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.item a {
+  display: block;
+}
+
+.item:hover a, exhibitions p:hover, contact a:hover, .mail:hover, menu label:hover, .active {
+  text-decoration: underline;
+}
+
+/*Typografie Ausstellungen*/
+exhibitions a {
+  font-size: 0.80em;
+  font-weight: 100;
+  line-height: 130%;
+  display: block;
+}
+
+contact p {
+  line-height: 130%;
+  display: block;
+  font-size: 1rem;
+}
+
+exhibitions a {
+  font-style: italic;
+  font-weight: 100;
+  letter-spacing: 0.070em;
+}
+
+exhibitions .item {
+  height: inherit;
+  display: block;
+}
+
+exhibitions .item:last-child {
+  padding-bottom: 25%;
+}
+
+contact p a::after {
+  content: " ";
+}
+
+/*Layout*/
+
+img {
+  position: relative;
+  width: 100%;
+}
+
+.content {
+  margin: 1% 0.5% 4% 0.5%;
+  position: relative;
+  height: 100%;
+}
+
+.quote, .aitext {
+  display: inline-block;
+  margin: 0 5% 0 0;
+  margin-top: 3.5em;
+}
+
+.aitext {
+	margin: 0 5% 10% 0;
+}
+
+.startseite .quote {
+margin-top: 0;}
+
+menu {
+  width: 45%;
+  position: fixed;
+  top: 1%;
+  left: 50%;
+  margin-bottom: 1em;
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+}
+
+footer a {
+  padding-right: 3em;
+}
+
+footer {
+  position: fixed;
+  bottom: 1%;
+}
+
+
+
+
+.projects {
+  width: 40%;
+  margin-left: 50%;
+
+-moz-column-count: 3;
+  -webkit-column-count: 3;
+  column-count: 3;
+  -moz-column-gap: 5%;
+  -webkit-column-gap: 5%;
+  column-gap: 5%;
+  margin-top: 6.5em;
+  margin-bottom: 5em;
+  }
+  
+  .projects .item {
+  padding-bottom:1em;
+  display: inline-block;
+  min-width:25%;
+  }
+
+.projects .item project-title {
+display: block;}
+/*
+.projects {
+  width: 50%;
+  margin-left: 50%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.projects .item {
+  margin-bottom: 1.2em;
+  flex-basis: 30%;
+  margin-right: 2.5%;
+}*/
+
+
+exhibitions {
+  margin-top: 8%;
+  display: none;
+}
+
+contact {
+  transform-origin: 0 100%;
+  transform: rotate(270deg);
+  position: fixed;
+  right: calc(0.5% - 600px);
+  bottom: 4%;
+  width: 600px;
+  z-index: 101;
+}
+
+/*Zwischen Day und Night Switchen*/
+input[name="buttons"]#aboutme:checked ~ .projects .research {display: none;}
+input[name="buttons"]#aboutme:checked ~ .projects .contact   {display: none;}
+input[name="buttons"]#aboutme:checked ~ .projects .podcasts {display: none;}
+
+input[name="buttons"]#research:checked ~ .projects .aboutme {display: none;}
+input[name="buttons"]#research:checked ~ .projects .contact   {display: none;}
+input[name="buttons"]#research:checked ~ .projects .podcasts {display: none;}
+
+input[name="buttons"]#contact:checked ~ .projects .aboutme {display: none;}
+input[name="buttons"]#contact:checked ~ .projects .podcasts {display: none;}
+input[name="buttons"]#contact:checked ~ .projects .research {display: none;}
+
+input[name="buttons"]#podcasts:checked ~ .projects .aboutme {display: none;}
+input[name="buttons"]#podcasts:checked ~ .projects .contact   {display: none;}
+input[name="buttons"]#podcasts:checked ~ .projects .research {display: none;}
+
+input[name="buttons"]#projects:checked ~ .description {display: block;margin-top:1em;}
+.description {display: none;}
+
+input[name="buttons"]#projects:checked ~ #arrow-down:after {content:"É…"; display:block;margin-top: 1em;}
+#arrow-down:after {content:"V";display:block;margin-top: 1em;}
+
+
+
+
+description {
+position:relative;
+z-index: 100;
+display: block;
+margin-top: 1em;
+}
+
+label:hover {
+text-decoration: underline;}
+
+menu label #1-label {
+text-transform: lowercase;}
+
+.invisible {
+  visibility: hidden;
+}
+
+header {position:fixed;;width:48%;z-index:101;display: block;}
+
+.about, .impressum {
+  padding-left: calc(var(--main-width) + ((100% - var(--main-width))/5));
+  width: calc(((100% - var(--main-width) )/ 5 ) * 2);
+}
+
+#about {
+  width: 45%;
+  padding-left: calc(var(--main-width) + ((100% - var(--main-width))/5));
+  margin-top: 15%;
+  display: block;
+}
+
+#back {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*Frontpage*/
+
+#frontlogo {
+  position: fixed;
+width: 85px;
+left: 50%;
+top: 50%;
+transform: translate(-50%,-50%);
+/*filter: invert();*/
+}
+
+
+.background-image video {
+    position: fixed;
+    left: 0%;
+    top: 0%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -1;
+}
+
+.gallery-vid .background-image video {
+  min-width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: -1;
+}
+
+/*Background-Image*/
+.item:hover .background-image .son, .item:hover .background-image, exhibitions p:hover .background-image, exhibitions p:hover .background-image {
+  display: flex;
+}
+
+.background-image {
+  display: none;
+  position: fixed;
+justify-content: center;
+align-items: center;
+text-align: center;
+top: 0;
+left: 0;
+height: 100%;
+width: 100%;
+z-index: -1;
+}
+
+
+.son {
+      display: none;
+      position: fixed;
+      background-repeat: no-repeat;
+      z-index: -1;
+      background-size: contain;
+      height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-position: center;
+}
+
+/*.son:first-child {
+    top: 0%;
+    left: 50%;
+    width: 50%;
+}
+
+.son:nth-child(2) {
+    top: 10%;
+    left: 10%;
+    width: 15%;
+}*/
+
+exhibitions .son:first-child {
+    top: 50%;
+    left: 50%;
+    width: 75%;
+    transform: translate(-50%,-50%);
+}
+
+#video .son:first-child {
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    background-size: cover;
+}
+
+.background-image img {
+  z-index: -1;
+  height: 100%;
+  width: auto;
+}
+
+.projects #photo .background-image img:first-child {
+  position: fixed;
+  top: 0;
+  margin-left: 10%;
+  height: 100%;
+}
+
+.projects #photo .background-image img:nth-child(2) {
+  position: fixed;
+  width: 25%;
+  height: auto;
+  left: 10%;
+  top: 40%;
+}
+
+.fotorama {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fotorama__stage {cursor:url('images/cursor/c1.png'), auto;}
+/*custom slider cursor*/
+#_1 {cursor:url('images/cursor/c1.png'), auto;}
+#_2 {cursor:url('images/cursor/c2.png'), auto;}
+#_3 {cursor:url('images/cursor/c3.png'), auto;}
+#_4 {cursor:url('images/cursor/c4.png'), auto;}
+#_5 {cursor:url('images/cursor/c5.png'), auto;}
+#_6 {cursor:url('images/cursor/c6.png'), auto;}
+#_7 {cursor:url('images/cursor/c7.png'), auto;}
+#_8 {cursor:url('images/cursor/c8.png'), auto;}
+#_9 {cursor:url('images/cursor/c9.png'), auto;}
+#_10 {cursor:url('images/cursor/c10.png'), auto;}
+#_11 {cursor:url('images/cursor/c11.png'), auto;}
+#_12 {cursor:url('images/cursor/c12.png'), auto;}
+#_13 {cursor:url('images/cursor/c13.png'), auto;}
+#_14 {cursor:url('images/cursor/c14.png'), auto;}
+#_15 {cursor:url('images/cursor/c15.png'), auto;}
+#_16 {cursor:url('images/cursor/c16.png'), auto;}
+#_17 {cursor:url('images/cursor/c17.png'), auto;}
+#_18 {cursor:url('images/cursor/c18.png'), auto;}
+#_19 {cursor:url('images/cursor/c19.png'), auto;}
+#_20 {cursor:url('images/cursor/c20.png'), auto;}
+#_21 {cursor:url('images/cursor/c21.png'), auto;}
+#_22 {cursor:url('images/cursor/c22.png'), auto;}
+#_23 {cursor:url('images/cursor/c23.png'), auto;}
+#_24 {cursor:url('images/cursor/c24.png'), auto;}
+#_25 {cursor:url('images/cursor/c25.png'), auto;}
+#_26 {cursor:url('images/cursor/c26.png'), auto;}
+#_27 {cursor:url('images/cursor/c27.png'), auto;}
+#_28 {cursor:url('images/cursor/c28.png'), auto;}
+#_29 {cursor:url('images/cursor/c29.png'), auto;}
+#_30 {cursor:url('images/cursor/c30.png'), auto;}
+#_31 {cursor:url('images/cursor/c31.png'), auto;}
+#_32 {cursor:url('images/cursor/c32.png'), auto;}
+#_33 {cursor:url('images/cursor/c33.png'), auto;}
+
+/*Menu*/
+input[name="buttons"] {
+  display: none;
+}
+
+/*Darkmode*/
+body.dark {
+  background: black;
+  color: white;
+}
+
+body.dark a {
+  color:white
+}
+
+body label.btn-toggle::after {
+  content:"11:11";
+}
+
+body.dark label.btn-toggle::after{
+  content:"OO:OO";
+}
+
+/*Responsive Mobile Layout*/
+@media only screen and (max-width: 1024px) {
+  .quote {margin-right: 20%;}
+.projects{
+    margin-bottom:2em;
+    -moz-column-count: 2;
+  -webkit-column-count: 2;
+  column-count: 2;
+  }
+  
+  menu {
+  width: 45%;
+  }
+  
+ .quote a, .aitext:first-line, menu label, footer a{
+  font-size: 1.8em;
+}
+}
+
+@media only screen and (max-width: 768px) {
+  header {position:relative;width:100%;display: block;}
+  
+  footer {
+  bottom: 0%;
+background: white;
+padding: 0.5% 1% 1% 0%;}
+
+footer a {
+padding-right: 1em;
+}
+
+body.dark footer {
+background: black;}
+  
+  .quote a, .aitext:first-line, menu label, footer a{
+  font-size: 1.6em;
+}
+  
+    .projects {
+    width: 80%;
+    margin: 0;
+    margin-bottom: 3em;
+    }
+  
+  .projects .item {
+  min-width: 50%;}
+
+menu {
+margin-block: ;
+margin-top: 1em;
+margin-bottom: 1.5em;
+position: sticky;
+float: right;
+width: 70%;
+}
+
+menu.startseite {
+left: 0;
+width: 95%;
+float: left;
+}
+  
+  
+  /*.quote a {font-size: 1.4em;}
+  .quote {margin-right: 0%;}
+  /*body {background-color: red;}*/
+}

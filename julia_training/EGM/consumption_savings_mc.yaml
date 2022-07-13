@@ -58,5 +58,5 @@ options:
     discretization:
         endo:
             n: [1000]
-        exo:
-            n: 7
+
+            
