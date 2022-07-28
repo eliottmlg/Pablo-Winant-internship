@@ -22,5 +22,7 @@ Now GitHub has 2 folders of interest
 - this would require that I first save folder eliottexp in julia_training--this is done already
 - also requires that I delete the current fork, so would delete it on github and in GitHub directory.
 - need to check everything in Dolo.jl forked (time iteration) to make sure I did not make important changes 
+- then delete Dolo.py
+
 
 - Third option: update Dolo.jl forked
